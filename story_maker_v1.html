@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이야기 만들기 — 꿈나무 AI 크리에이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #E8F4FD;
+    --sky-mid: #B8DCFB;
+    --blue: #4A9EE8;
+    --blue-dark: #2B7CC9;
+    --purple: #7B6CF6;
+    --purple-light: #EDE9FF;
+    --teal: #38C9A0;
+    --teal-light: #D9F7EE;
+    --coral: #FF7B6B;
+    --coral-light: #FFECE9;
+    --amber: #F9A825;
+    --amber-light: #FFF3D0;
+    --ink: #2C2C3A;
+    --ink-soft: #5A5A72;
+    --border: #D8E4F2;
+    --bg: #F2F8FF;
+    --white: #FFFFFF;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* 헤더 */
+  header {
+    background: var(--white);
+    border-bottom: 1.5px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--purple-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .header-title {
+    font-family: 'Gaegu', cursive;
+    font-size: 22px;
+    color: var(--purple);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  /* 스텝 네비 */
+  .step-nav {
+    display: flex;
+    gap: 0;
+    padding: 20px 28px 0;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .step-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+
+  .step-item.done:not(:last-child)::after {
+    background: var(--teal);
+  }
+
+  .step-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s;
+  }
+
+  .step-item.active .step-dot {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+  }
+
+  .step-item.done .step-dot {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: white;
+    font-size: 16px;
+  }
+
+  .step-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  .step-item.active .step-label { color: var(--purple); font-weight: 500; }
+  .step-item.done .step-label { color: var(--teal); }
+
+  /* 메인 영역 */
+  main {
+    max-width: 760px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+  }
+
+  /* 섹션 카드 */
+  .card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 500;
+  }
+
+  .card-label .icon-badge {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .icon-badge.purple { background: var(--purple-light); }
+  .icon-badge.teal { background: var(--teal-light); }
+  .icon-badge.coral { background: var(--coral-light); }
+  .icon-badge.amber { background: var(--amber-light); }
+
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    resize: none;
+    line-height: 1.7;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--purple);
+    background: var(--white);
+  }
+
+  textarea::placeholder { color: #AABBD0; }
+
+  /* AI 버튼 */
+  .btn-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 99px;
+    border: 1.5px solid var(--purple);
+    background: var(--purple-light);
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .btn-ai:hover { background: var(--purple); color: white; }
+  .btn-ai:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-ai.teal {
+    border-color: var(--teal);
+    background: var(--teal-light);
+    color: #1a9e78;
+  }
+  .btn-ai.teal:hover { background: var(--teal); color: white; }
+
+  /* AI 응답 박스 */
+  .ai-box {
+    background: var(--purple-light);
+    border: 1px solid #C8C0FF;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #3d2fb5;
+    white-space: pre-wrap;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .ai-box.teal-box {
+    background: var(--teal-light);
+    border-color: #90E0C8;
+    color: #0a6b50;
+  }
+
+  .ai-box.show { display: block; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  .ai-hint {
+    font-size: 12px;
+    color: #AABBD0;
+    margin-top: 8px;
+  }
+
+  /* 로딩 애니메이션 */
+  .loading-text { display: inline-flex; align-items: center; gap: 4px; }
+  .dot { width:5px; height:5px; border-radius:50%; background:currentColor; display:inline-block; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2){ animation-delay:0.2s; }
+  .dot:nth-child(3){ animation-delay:0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  /* 3컷 그리드 */
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .scene-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .scene-head {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .scene-head.s1 { background: #EDE9FF; color: #5840D8; }
+  .scene-head.s2 { background: var(--coral-light); color: #C4402E; }
+  .scene-head.s3 { background: var(--teal-light); color: #0a6b50; }
+
+  .scene-body { padding: 8px; }
+  .scene-body textarea {
+    min-height: 120px;
+    font-size: 13px;
+    margin: 0;
+    background: var(--bg);
+  }
+
+  /* 하단 버튼 */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .btn-main {
+    flex: 1;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-main.purple {
+    background: var(--purple);
+    color: white;
+  }
+  .btn-main.purple:hover { background: #6458e0; }
+  .btn-main.purple:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-main.teal {
+    background: var(--teal);
+    color: white;
+  }
+  .btn-main.teal:hover { background: #28b08b; }
+
+  .btn-back {
+    padding: 13px 18px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--ink-soft);
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-back:hover { background: var(--bg); }
+
+  /* 완성 화면 */
+  .final-wrap {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .final-header {
+    background: linear-gradient(135deg, #EDE9FF 0%, #D9F7EE 100%);
+    padding: 20px 24px;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .final-badge {
+    display: inline-block;
+    background: var(--purple);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 8px;
+  }
+
+  .final-main-title {
+    font-family: 'Gaegu', cursive;
+    font-size: 22px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .final-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .final-scene {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .final-scene:last-child { border-bottom: none; }
+
+  .final-scene-label {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .fl1 { background: #EDE9FF; color: #5840D8; }
+  .fl2 { background: var(--coral-light); color: #C4402E; }
+  .fl3 { background: var(--teal-light); color: #0a6b50; }
+
+  .final-scene-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--teal);
+    background: var(--teal-light);
+    color: #0a6b50;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: var(--teal); color: white; }
+
+  .copy-msg {
+    text-align: center;
+    font-size: 13px;
+    color: var(--teal);
+    font-weight: 500;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* 추가 질문 영역 */
+  .extra-box {
+    background: var(--amber-light);
+    border: 1px solid #F0D070;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #6b4a00;
+    white-space: pre-wrap;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .extra-box.show { display: block; }
+
+  /* 숨겨진 요소 */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">📖</div>
+  <div>
+    <div class="header-title">이야기 만들기</div>
+    <div class="header-sub">꿈나무 AI 크리에이터 · 3차시</div>
+  </div>
+</header>
+
+<div class="step-nav" id="stepNav">
+  <div class="step-item active" id="sn1">
+    <div class="step-dot">1</div>
+    <div class="step-label">주인공·배경</div>
+  </div>
+  <div class="step-item" id="sn2">
+    <div class="step-dot">2</div>
+    <div class="step-label">문제 발생</div>
+  </div>
+  <div class="step-item" id="sn3">
+    <div class="step-dot">3</div>
+    <div class="step-label">3컷 장면</div>
+  </div>
+  <div class="step-item" id="sn4">
+    <div class="step-dot">✓</div>
+    <div class="step-label">완성!</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-label">
+        <span class="icon-badge purple">🧒</span>
+        주인공은 누구예요?
+      </div>
+      <textarea id="char" rows="3" placeholder="예) 용감한 소녀 지아, 말하는 고양이 뭉치, 작은 로봇 핑…&#10;이름, 특징, 능력 같은 걸 자유롭게 써봐요!"></textarea>
+      <div>
+        <button class="btn-ai" onclick="askAI('char')">✨ AI한테 아이디어 받기</button>
+      </div>
+      <div class="ai-box" id="ai-char"></div>
+      <div class="ai-hint">AI가 캐릭터 아이디어를 줄게요. 참고해서 내 주인공을 만들어봐요!</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">
+        <span class="icon-badge teal">🗺️</span>
+        어디에서 이야기가 시작돼요?
+      </div>
+      <textarea id="place" rows="3" placeholder="예) 구름 위에 있는 작은 마을, 깊은 숲속 오두막, 미래의 우주 정거장…&#10;어떤 곳인지 상상해서 써봐요!"></textarea>
+      <div>
+        <button class="btn-ai" onclick="askAI('place')">✨ AI한테 아이디어 받기</button>
+      </div>
+      <div class="ai-box teal-box" id="ai-place"></div>
+      <div class="ai-hint">주인공에게 어울리는 배경을 AI가 제안해줄게요.</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-main purple" onclick="goStep(2)">다음 → 문제 만들기</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="card-label">
+        <span class="icon-badge coral">⚡</span>
+        어떤 문제나 사건이 생겼어요?
+      </div>
+      <textarea id="problem" rows="4" placeholder="예) 마을에서 색깔이 사라지기 시작했어요.&#10;친구가 이상한 곳으로 끌려갔어요.&#10;갑자기 수상한 문이 나타났어요…"></textarea>
+      <div>
+        <button class="btn-ai" onclick="askAI('problem')">✨ AI한테 아이디어 받기</button>
+      </div>
+      <div class="ai-box" id="ai-problem"></div>
+      <div class="ai-hint">주인공과 배경을 보고 AI가 재미있는 사건을 제안해줄게요!</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">
+        <span class="icon-badge amber">💡</span>
+        어떻게 해결할 것 같아요? (힌트만 써도 OK!)
+      </div>
+      <textarea id="solution" rows="3" placeholder="예) 용기를 내서 혼자 맞서요&#10;친구들과 힘을 합쳐요&#10;숨겨진 특별한 능력을 발견해요…"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(1)">← 돌아가기</button>
+      <button class="btn-main purple" onclick="goStep(3)">다음 → 장면 쓰기</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3" class="hidden">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-label">
+        <span class="icon-badge purple">✨</span>
+        AI가 3컷 틀을 만들어줄게요!
+      </div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px;line-height:1.6;">
+        아래 버튼을 누르면 AI가 지금까지 쓴 내용으로 3컷을 만들어줘요.<br>마음에 안 드는 부분은 직접 고쳐써도 돼요! ✏️
+      </p>
+      <button class="btn-ai teal" id="btnMakeScenes" onclick="makeScenes()">🎬 3컷 틀 만들어줘!</button>
+    </div>
+
+    <div class="scene-grid">
+      <div class="scene-card">
+        <div class="scene-head s1">🌅 1컷 — 시작</div>
+        <div class="scene-body">
+          <textarea id="sc1" rows="6" placeholder="이야기가 어떻게 시작되나요?"></textarea>
+        </div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-head s2">⚡ 2컷 — 사건</div>
+        <div class="scene-body">
+          <textarea id="sc2" rows="6" placeholder="문제가 터졌어요!&#10;어떤 일이 일어났나요?"></textarea>
+        </div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-head s3">🌈 3컷 — 결말</div>
+        <div class="scene-body">
+          <textarea id="sc3" rows="6" placeholder="어떻게 끝났나요?&#10;주인공은 어떻게 됐어요?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">
+        <span class="icon-badge amber">💬</span>
+        AI한테 더 물어보고 싶은 게 있어요?
+      </div>
+      <textarea id="extraQ" rows="2" placeholder="예) 2컷을 더 신나게 만들어줘! 주인공 대사를 넣어줘. 결말을 더 감동적으로 바꿔줘…"></textarea>
+      <div>
+        <button class="btn-ai" onclick="askExtra()">✨ 물어보기</button>
+      </div>
+      <div class="extra-box" id="ai-extra"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(2)">← 돌아가기</button>
+      <button class="btn-main teal" onclick="goStep(4)">🎉 완성하기!</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div id="step4" class="hidden">
+    <div class="final-wrap" id="finalWrap"></div>
+
+    <div class="btn-row" style="flex-direction:column;gap:10px;">
+      <button class="copy-btn" onclick="copyStory()">📋 이야기 복사하기</button>
+      <div class="copy-msg" id="copyMsg">✅ 복사됐어요! 캔바에 붙여넣어봐요.</div>
+      <button class="btn-back" style="width:100%;text-align:center;" onclick="goStep(3)">← 다시 고치기</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+let currentStep = 1;
+
+function goStep(n) {
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('step'+i);
+    if (i === n) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+
+    const sn = document.getElementById('sn'+i);
+    sn.className = 'step-item';
+    if (i === n) sn.className += ' active';
+    else if (i < n) sn.className += ' done';
+
+    const dot = sn.querySelector('.step-dot');
+    if (i < n) dot.textContent = '✓';
+    else dot.textContent = i;
+  });
+  currentStep = n;
+  if (n === 4) buildFinal();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+async function callAI(userPrompt) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: '당신은 초등학생의 이야기 만들기를 도와주는 친절하고 재미있는 AI 친구예요. 항상 쉽고 친근한 말로, 초등학생이 이해할 수 있게 답해주세요. 아이디어는 구체적으로, 2~4개 제안해주세요. 너무 길지 않게 각 아이디어는 1~2문장으로 써주세요.',
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text || '앗, 잠깐 문제가 생겼어요. 다시 눌러봐요!';
+}
+
+function setLoading(box) {
+  box.innerHTML = '<span class="loading-text">AI가 생각하는 중 <span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+  box.classList.add('show');
+}
+
+async function askAI(type) {
+  const char = getVal('char');
+  const place = getVal('place');
+  let prompt = '';
+  let boxId = '';
+
+  if (type === 'char') {
+    boxId = 'ai-char';
+    prompt = '초등학생 이야기의 주인공 캐릭터 아이디어를 3개 제안해줘. 각각 이름과 특징을 한 문장으로 알려줘. 번호를 붙여줘.';
+  } else if (type === 'place') {
+    boxId = 'ai-place';
+    prompt = `주인공: "${char || '아직 정하지 않음'}". 이 주인공에게 어울리는 이야기 배경 장소를 3개 제안해줘. 각각 한 문장으로 어떤 곳인지 설명해줘. 번호를 붙여줘.`;
+  } else if (type === 'problem') {
+    boxId = 'ai-problem';
+    prompt = `주인공: "${char || '알 수 없음'}", 배경: "${place || '알 수 없음'}". 이 설정에서 일어날 수 있는 재미있는 사건이나 문제를 3개 제안해줘. 각각 한 문장으로 써줘. 번호를 붙여줘.`;
+  }
+
+  const box = document.getElementById(boxId);
+  setLoading(box);
+
+  try {
+    const answer = await callAI(prompt);
+    box.textContent = answer;
+  } catch(e) {
+    box.textContent = '앗, 연결이 안 됐어요. 다시 눌러봐요!';
+  }
+}
+
+async function makeScenes() {
+  const char = getVal('char');
+  const place = getVal('place');
+  const problem = getVal('problem');
+  const solution = getVal('solution');
+
+  const btn = document.getElementById('btnMakeScenes');
+  btn.disabled = true;
+  btn.textContent = '만드는 중...';
+
+  const prompt = `초등학생 이야기를 3컷 스토리보드로 만들어줘.
+주인공: ${char || '(미정)'}
+배경: ${place || '(미정)'}
+문제/사건: ${problem || '(미정)'}
+해결 방법 힌트: ${solution || '(미정)'}
+
+반드시 아래 형식으로만 답해줘. 각 컷은 2~3문장으로 쉽게 써줘:
+[1컷]
+(시작 장면 — 주인공과 배경 소개)
+[2컷]
+(사건 장면 — 문제가 생긴 순간)
+[3컷]
+(결말 장면 — 어떻게 해결됐는지)`;
+
+  try {
+    const answer = await callAI(prompt);
+    const m1 = answer.match(/\[1컷\]([\s\S]*?)(?=\[2컷\])/);
+    const m2 = answer.match(/\[2컷\]([\s\S]*?)(?=\[3컷\])/);
+    const m3 = answer.match(/\[3컷\]([\s\S]*?)$/);
+    if (m1) document.getElementById('sc1').value = m1[1].trim();
+    if (m2) document.getElementById('sc2').value = m2[1].trim();
+    if (m3) document.getElementById('sc3').value = m3[1].trim();
+  } catch(e) {
+    document.getElementById('sc1').placeholder = '연결이 안 됐어요. 직접 써봐요!';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🎬 다시 만들어줘!';
+}
+
+async function askExtra() {
+  const q = getVal('extraQ');
+  if (!q) return;
+
+  const sc1 = getVal('sc1');
+  const sc2 = getVal('sc2');
+  const sc3 = getVal('sc3');
+
+  const box = document.getElementById('ai-extra');
+  setLoading(box);
+  box.className = 'extra-box show';
+
+  const prompt = `현재 3컷 이야기:
+1컷: ${sc1 || '(비어있음)'}
+2컷: ${sc2 || '(비어있음)'}
+3컷: ${sc3 || '(비어있음)'}
+
+학생 질문: ${q}
+
+위 이야기를 바탕으로 학생의 질문에 답해줘. 쉽고 재미있게, 3~5문장으로 써줘.`;
+
+  try {
+    const answer = await callAI(prompt);
+    box.textContent = answer;
+  } catch(e) {
+    box.textContent = '앗, 연결이 안 됐어요. 다시 눌러봐요!';
+  }
+}
+
+function buildFinal() {
+  const char = getVal('char') || '(주인공 미입력)';
+  const place = getVal('place') || '(배경 미입력)';
+  const sc1 = getVal('sc1') || '(1컷 미입력)';
+  const sc2 = getVal('sc2') || '(2컷 미입력)';
+  const sc3 = getVal('sc3') || '(3컷 미입력)';
+
+  document.getElementById('finalWrap').innerHTML = `
+    <div class="final-header">
+      <div class="final-badge">✨ 내 이야기 완성!</div>
+      <div class="final-main-title">나만의 이야기</div>
+      <div class="final-meta">주인공: ${char} · 배경: ${place}</div>
+    </div>
+    <div class="final-scene">
+      <div class="final-scene-label fl1">🌅 1컷 — 시작</div>
+      <div class="final-scene-text">${sc1}</div>
+    </div>
+    <div class="final-scene">
+      <div class="final-scene-label fl2">⚡ 2컷 — 사건</div>
+      <div class="final-scene-text">${sc2}</div>
+    </div>
+    <div class="final-scene">
+      <div class="final-scene-label fl3">🌈 3컷 — 결말</div>
+      <div class="final-scene-text">${sc3}</div>
+    </div>
+  `;
+}
+
+function copyStory() {
+  const char = getVal('char') || '(미입력)';
+  const place = getVal('place') || '(미입력)';
+  const sc1 = getVal('sc1') || '(미입력)';
+  const sc2 = getVal('sc2') || '(미입력)';
+  const sc3 = getVal('sc3') || '(미입력)';
+
+  const text = `📖 나만의 이야기\n\n주인공: ${char}\n배경: ${place}\n\n🌅 1컷 — 시작\n${sc1}\n\n⚡ 2컷 — 사건\n${sc2}\n\n🌈 3컷 — 결말\n${sc3}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('copyMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 3000);
+  });
+}
+</script>
+</body>
+</html>
