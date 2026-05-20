@@ -275,6 +275,30 @@
   .dot:nth-child(3){ animation-delay:0.4s; }
   @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
 
+  /* 앱2 스타일 */
+  .img-tab {
+    flex:1; padding:10px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--border); background:var(--white);
+    color:var(--ink-soft); font-size:13px; font-weight:500;
+    cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.2s;
+  }
+  .active-tab { background:#D9F7EE; border-color:var(--teal); color:#0a6b50; }
+  .img2-card { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:12px; }
+  .img2-head { font-size:13px; font-weight:700; padding:6px 12px; border-radius:var(--radius-sm); display:inline-block; margin-bottom:10px; }
+  .img2-summary { font-size:13px; color:var(--ink-soft); margin-bottom:10px; line-height:1.6; background:var(--bg); padding:8px 12px; border-radius:var(--radius-sm); }
+  .img2-prompt-box { font-size:13px; color:#534AB7; background:#EDE9FF; border-radius:var(--radius-sm); padding:10px 12px; line-height:1.7; margin-bottom:4px; white-space:pre-wrap; }
+  .img2-upload {
+    border:1.5px dashed var(--border); border-radius:var(--radius-sm);
+    height:130px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; margin-top:10px; background:var(--bg);
+    overflow:hidden; position:relative; transition:border-color 0.2s;
+  }
+  .img2-upload:hover { border-color:var(--teal); }
+  .img2-upload img { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; }
+  .gallery-img-card { border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+  .gallery-img-card img { width:100%; height:140px; object-fit:cover; display:block; }
+  .gallery-img-label { font-size:11px; font-weight:500; padding:5px 8px; background:var(--bg); color:var(--ink-soft); }
+
   /* 4컷 그리드 */
   .scene-grid {
     display: grid;
@@ -502,6 +526,16 @@
   </div>
 </header>
 
+<div style="max-width:760px;margin:12px auto 0;padding:0 20px;display:flex;gap:8px;align-items:center;">
+  <button onclick="saveToLocal()" style="padding:7px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--teal);background:var(--teal-light);color:#0a6b50;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">💾 저장</button>
+  <button onclick="exportJSON()" style="padding:7px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">📤 파일로 내보내기</button>
+  <label style="padding:7px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
+    📥 파일 불러오기
+    <input type="file" accept=".json" onchange="importJSON(this)" style="display:none;">
+  </label>
+  <span id="saveMsg" style="font-size:12px;color:var(--teal);display:none;margin-left:4px;">✅ 저장됐어요!</span>
+</div>
+
 <div class="step-nav" id="stepNav">
   <div class="step-item active" id="sn1">
     <div class="step-dot">1</div>
@@ -695,6 +729,7 @@
     <div class="final-wrap" id="finalWrap"></div>
 
     <div class="btn-row" style="flex-direction:column;gap:10px;margin-bottom:20px;">
+      <button class="btn-main purple" onclick="goApp2()" style="width:100%;font-size:15px;">🎨 이미지 만들러 가기 →</button>
       <button class="btn-main teal" onclick="window.print()" style="width:100%;">🖨️ 인쇄하기</button>
       <button class="copy-btn" onclick="copyStory()">📋 텍스트 복사하기 (캔바용)</button>
       <div class="copy-msg" id="copyMsg">✅ 복사됐어요! 캔바에 붙여넣어봐요.</div>
@@ -768,6 +803,136 @@
   </div>
 
 </main>
+
+<!-- ===== 앱 2: 이미지 제작 ===== -->
+<div id="app2" style="display:none;">
+
+  <header style="background:var(--white);border-bottom:1.5px solid var(--border);padding:18px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;">
+    <div style="width:40px;height:40px;background:#D9F7EE;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">🎨</div>
+    <div>
+      <div style="font-family:'Gaegu',cursive;font-size:22px;color:var(--teal);font-weight:700;line-height:1;">AI 활용 이미지 만들기</div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">made by sook</div>
+    </div>
+    <button onclick="backToApp1()" style="margin-left:auto;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);color:var(--ink-soft);font-size:13px;cursor:pointer;">← 이야기로 돌아가기</button>
+  </header>
+
+  <div style="max-width:760px;margin:0 auto;padding:20px;">
+
+    <div style="background:#D9F7EE;border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;line-height:1.75;">
+      <p style="font-size:15px;font-weight:500;color:#0a6b50;margin-bottom:6px;">🖼️ 이야기 속 캐릭터와 배경을 이미지로 만들어봐요!</p>
+      <p style="font-size:13px;color:#1a9e78;">각 칸의 프롬프트를 복사해서 Gemini Jams나 캔바 AI 이미지에 붙여넣으면 돼요.<br>만든 이미지는 아래 칸에 업로드해서 모아봐요!</p>
+    </div>
+
+    <!-- 이미지 탭 -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="img-tab active-tab" id="tabChar" onclick="switchImgTab('char')">🧒 캐릭터 이미지</button>
+      <button class="img-tab" id="tabBg" onclick="switchImgTab('bg')">🌅 배경 이미지</button>
+    </div>
+
+    <!-- 캐릭터 탭 -->
+    <div id="tabCharContent">
+      <div id="charStep" style="font-size:12px;color:var(--ink-soft);margin-bottom:12px;">1/3 — 주인공</div>
+
+      <div id="charCard1" class="img2-card">
+        <div class="img2-head" style="background:#EDE9FF;color:#5840D8;">🧒 주인공</div>
+        <div id="charSummary1" class="img2-summary"></div>
+        <div class="img2-prompt-box" id="charPrompt1">버튼을 눌러 프롬프트를 만들어요</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn-ai" onclick="makeImg2Prompt('char',1)">✨ 프롬프트 만들기</button>
+          <button class="btn-ai" id="c1copy" style="display:none" onclick="copyImg2Prompt('char',1)">📋 복사</button>
+          <button class="btn-ai" id="c1gemini" style="display:none" onclick="openImg2('gemini','char',1)">→ Gemini Jams</button>
+          <button class="btn-ai" id="c1canva" style="display:none" onclick="openImg2('canva','char',1)">→ 캔바 AI</button>
+        </div>
+        <div class="img2-upload" id="charUpload1" onclick="triggerImg2('charFile1')">
+          <input type="file" id="charFile1" accept="image/*" style="display:none" onchange="previewImg2(this,'charUpload1')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 만든 이미지 올리기</span>
+        </div>
+      </div>
+
+      <div id="charCard2" class="img2-card" style="display:none;">
+        <div class="img2-head" style="background:#D9F7EE;color:#0a6b50;">🤝 도와주는 인물 (조력자)</div>
+        <div id="charSummary2" class="img2-summary"></div>
+        <div class="img2-prompt-box" id="charPrompt2">버튼을 눌러 프롬프트를 만들어요</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn-ai" onclick="makeImg2Prompt('char',2)">✨ 프롬프트 만들기</button>
+          <button class="btn-ai" id="c2copy" style="display:none" onclick="copyImg2Prompt('char',2)">📋 복사</button>
+          <button class="btn-ai" id="c2gemini" style="display:none" onclick="openImg2('gemini','char',2)">→ Gemini Jams</button>
+          <button class="btn-ai" id="c2canva" style="display:none" onclick="openImg2('canva','char',2)">→ 캔바 AI</button>
+        </div>
+        <div class="img2-upload" id="charUpload2" onclick="triggerImg2('charFile2')">
+          <input type="file" id="charFile2" accept="image/*" style="display:none" onchange="previewImg2(this,'charUpload2')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 만든 이미지 올리기</span>
+        </div>
+      </div>
+
+      <div id="charCard3" class="img2-card" style="display:none;">
+        <div class="img2-head" style="background:#FAECE7;color:#C4402E;">🦹 방해하는 인물/환경</div>
+        <div id="charSummary3" class="img2-summary"></div>
+        <div class="img2-prompt-box" id="charPrompt3">버튼을 눌러 프롬프트를 만들어요</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn-ai" onclick="makeImg2Prompt('char',3)">✨ 프롬프트 만들기</button>
+          <button class="btn-ai" id="c3copy" style="display:none" onclick="copyImg2Prompt('char',3)">📋 복사</button>
+          <button class="btn-ai" id="c3gemini" style="display:none" onclick="openImg2('gemini','char',3)">→ Gemini Jams</button>
+          <button class="btn-ai" id="c3canva" style="display:none" onclick="openImg2('canva','char',3)">→ 캔바 AI</button>
+        </div>
+        <div class="img2-upload" id="charUpload3" onclick="triggerImg2('charFile3')">
+          <input type="file" id="charFile3" accept="image/*" style="display:none" onchange="previewImg2(this,'charUpload3')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 만든 이미지 올리기</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-back" id="charPrevBtn" onclick="charNav(-1)" style="display:none;">← 이전</button>
+        <button class="btn-main teal" id="charNextBtn" onclick="charNav(1)" style="flex:1;">다음 → 조력자</button>
+        <button class="btn-main purple" id="charDoneBtn" onclick="switchImgTab('bg')" style="display:none;flex:1;">배경 이미지 만들기 →</button>
+      </div>
+    </div>
+
+    <!-- 배경 탭 -->
+    <div id="tabBgContent" style="display:none;">
+      <div id="bgStep" style="font-size:12px;color:var(--ink-soft);margin-bottom:12px;">1/4 — 1컷(기) 배경</div>
+
+      ${[
+        {n:1, label:'🌅 1컷 — 기 (시작) 배경', color:'#EDE9FF', tc:'#5840D8', sc:'sc1'},
+        {n:2, label:'⚡ 2컷 — 승 (사건) 배경', color:'#FFECE9', tc:'#C4402E', sc:'sc2'},
+        {n:3, label:'🔥 3컷 — 전 (해결시도) 배경', color:'#FFF3D0', tc:'#854F0B', sc:'sc3'},
+        {n:4, label:'🌈 4컷 — 결 (결말) 배경', color:'#D9F7EE', tc:'#0a6b50', sc:'sc4'},
+      ].map(s => `
+      <div id="bgCard${s.n}" class="img2-card" style="${s.n>1?'display:none;':''}">
+        <div class="img2-head" style="background:${s.color};color:${s.tc};">${s.label}</div>
+        <div id="bgSummary${s.n}" class="img2-summary"></div>
+        <div class="img2-prompt-box" id="bgPrompt${s.n}">버튼을 눌러 프롬프트를 만들어요</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn-ai" onclick="makeImg2Prompt('bg',${s.n})">✨ 프롬프트 만들기</button>
+          <button class="btn-ai" id="b${s.n}copy" style="display:none" onclick="copyImg2Prompt('bg',${s.n})">📋 복사</button>
+          <button class="btn-ai" id="b${s.n}gemini" style="display:none" onclick="openImg2('gemini','bg',${s.n})">→ Gemini Jams</button>
+          <button class="btn-ai" id="b${s.n}canva" style="display:none" onclick="openImg2('canva','bg',${s.n})">→ 캔바 AI</button>
+        </div>
+        <div class="img2-upload" id="bgUpload${s.n}" onclick="triggerImg2('bgFile${s.n}')">
+          <input type="file" id="bgFile${s.n}" accept="image/*" style="display:none" onchange="previewImg2(this,'bgUpload${s.n}')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 만든 이미지 올리기</span>
+        </div>
+      </div>`).join('')}
+
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-back" id="bgPrevBtn" onclick="bgNav(-1)" style="display:none;">← 이전</button>
+        <button class="btn-main teal" id="bgNextBtn" onclick="bgNav(1)" style="flex:1;">다음 → 2컷 배경</button>
+        <button class="btn-main purple" id="bgDoneBtn" onclick="showGallery()" style="display:none;flex:1;">✨ 갤러리 완성!</button>
+      </div>
+    </div>
+
+    <!-- 갤러리 -->
+    <div id="gallerySection" style="display:none;margin-top:20px;">
+      <div style="font-size:16px;font-weight:500;color:var(--ink);margin-bottom:14px;">🖼️ 완성된 이미지 갤러리</div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:8px;">캐릭터</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;" id="galleryChars"></div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:8px;">배경 · 장면</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;" id="galleryBgs"></div>
+      <button class="btn-main teal" onclick="window.print()" style="width:100%;">🖨️ 갤러리 인쇄하기</button>
+    </div>
+
+  </div>
+</div>
 
 <script>
 
@@ -1062,6 +1227,240 @@ function copyStory() {
     msg.style.display = 'block';
     setTimeout(() => msg.style.display = 'none', 3000);
   });
+}
+
+// ===== 저장 / 불러오기 =====
+const SAVE_KEY = 'story_maker_data';
+const FIELDS = ['char','helper','obstacle','place','problem','solution','sc1','sc2','sc3','sc4'];
+
+function collectData() {
+  const data = { step: currentStep };
+  FIELDS.forEach(f => { data[f] = getVal(f); });
+  return data;
+}
+
+function applyData(data) {
+  FIELDS.forEach(f => {
+    const el = document.getElementById(f);
+    if (el && data[f] !== undefined) el.value = data[f];
+  });
+  if (data.step) goStep(data.step);
+}
+
+function saveToLocal() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(collectData()));
+  const msg = document.getElementById('saveMsg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2500);
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(collectData(), null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '내이야기_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importJSON(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      applyData(data);
+    } catch { alert('파일을 읽을 수 없어요. 올바른 파일인지 확인해봐요!'); }
+  };
+  reader.readAsText(input.files[0]);
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem(SAVE_KEY);
+  if (saved) {
+    try { applyData(JSON.parse(saved)); } catch {}
+  }
+}
+
+// ===== 앱 2 JS =====
+let charStepNum = 1;
+let bgStepNum = 1;
+const img2Prompts = { char:{}, bg:{} };
+
+const charLabels = ['주인공','도와주는 인물 (조력자)','방해하는 인물/환경'];
+const bgLabels = ['1컷(기) — 시작 배경','2컷(승) — 사건 배경','3컷(전) — 해결시도 배경','4컷(결) — 결말 배경'];
+const bgScKeys = ['sc1','sc2','sc3','sc4'];
+
+function goApp2() {
+  document.getElementById('app2').style.display = 'block';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('.step-nav').style.display = 'none';
+  document.querySelector('main').style.display = 'none';
+
+  // 앱1 데이터 앱2에 주입
+  const charTexts = [getVal('char'), getVal('helper'), getVal('obstacle')];
+  charTexts.forEach((t,i) => {
+    const el = document.getElementById('charSummary'+(i+1));
+    if(el) el.textContent = t || '(입력 없음)';
+  });
+  bgScKeys.forEach((key,i) => {
+    const el = document.getElementById('bgSummary'+(i+1));
+    if(el) el.textContent = getVal(key) || '(입력 없음)';
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function backToApp1() {
+  document.getElementById('app2').style.display = 'none';
+  document.querySelector('header').style.display = 'flex';
+  document.querySelector('.step-nav').style.display = 'flex';
+  document.querySelector('main').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function switchImgTab(tab) {
+  document.getElementById('tabCharContent').style.display = tab==='char' ? 'block' : 'none';
+  document.getElementById('tabBgContent').style.display = tab==='bg' ? 'block' : 'none';
+  document.getElementById('tabChar').className = 'img-tab' + (tab==='char' ? ' active-tab' : '');
+  document.getElementById('tabBg').className = 'img-tab' + (tab==='bg' ? ' active-tab' : '');
+}
+
+// 페이지 로드 시 자동 복원
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem(SAVE_KEY);
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      const hasContent = Object.keys(data).some(k => k !== 'step' && data[k]);
+      if (hasContent) {
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3C3489;color:white;padding:10px 20px;border-radius:99px;font-size:13px;z-index:999;display:flex;gap:12px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-family:Noto Sans KR,sans-serif;';
+        toast.innerHTML = '💾 저장된 이야기가 있어요! <button onclick="applyData('+JSON.stringify(data)+');this.parentElement.remove();" style="background:white;color:#3C3489;border:none;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">불러오기</button> <button onclick="this.parentElement.remove();" style="background:transparent;color:rgba(255,255,255,0.7);border:none;font-size:16px;cursor:pointer;">✕</button>';
+        document.body.appendChild(toast);
+        setTimeout(() => { if(toast.parentElement) toast.remove(); }, 8000);
+      }
+    } catch {}
+  }
+});
+
+function charNav(dir) {
+  document.getElementById('charCard'+charStepNum).style.display = 'none';
+  charStepNum += dir;
+  document.getElementById('charCard'+charStepNum).style.display = 'block';
+  updateCharNav();
+}
+
+function updateCharNav() {
+  const labels = ['주인공','조력자','방해 인물/환경'];
+  document.getElementById('charStep').textContent = `${charStepNum}/3 — ${labels[charStepNum-1]}`;
+  document.getElementById('charPrevBtn').style.display = charStepNum > 1 ? 'inline-block' : 'none';
+  document.getElementById('charNextBtn').style.display = charStepNum < 3 ? 'inline-flex' : 'none';
+  document.getElementById('charDoneBtn').style.display = charStepNum === 3 ? 'inline-flex' : 'none';
+  if(charStepNum < 3) {
+    const nextLabels = ['조력자','방해 인물/환경'];
+    document.getElementById('charNextBtn').textContent = `다음 → ${nextLabels[charStepNum-1]}`;
+  }
+}
+
+function bgNav(dir) {
+  document.getElementById('bgCard'+bgStepNum).style.display = 'none';
+  bgStepNum += dir;
+  document.getElementById('bgCard'+bgStepNum).style.display = 'block';
+  updateBgNav();
+}
+
+function updateBgNav() {
+  const labels = ['1컷(기) 배경','2컷(승) 배경','3컷(전) 배경','4컷(결) 배경'];
+  document.getElementById('bgStep').textContent = `${bgStepNum}/4 — ${labels[bgStepNum-1]}`;
+  document.getElementById('bgPrevBtn').style.display = bgStepNum > 1 ? 'inline-block' : 'none';
+  document.getElementById('bgNextBtn').style.display = bgStepNum < 4 ? 'inline-flex' : 'none';
+  document.getElementById('bgDoneBtn').style.display = bgStepNum === 4 ? 'inline-flex' : 'none';
+  if(bgStepNum < 4) {
+    const nextLabels = ['2컷(승)','3컷(전)','4컷(결)'];
+    document.getElementById('bgNextBtn').textContent = `다음 → ${nextLabels[bgStepNum-1]} 배경`;
+  }
+}
+
+function makeImg2Prompt(type, n) {
+  let text = '';
+  const style = 'children\'s book illustration, colorful, friendly, bright, no text';
+  if(type === 'char') {
+    const charTexts = [getVal('char'), getVal('helper'), getVal('obstacle')];
+    const raw = charTexts[n-1] || charLabels[n-1];
+    const eng = korToEngStyle(raw);
+    text = `A cute cartoon character: ${eng}. Full body, white background, simple design, ${style}`;
+  } else {
+    const raw = getVal(bgScKeys[n-1]) || bgLabels[n-1];
+    const eng = korToEngStyle(raw.slice(0,60));
+    text = `A scene background: ${eng}. Wide landscape, no characters, ${style}`;
+  }
+  img2Prompts[type][n] = text;
+  document.getElementById(`${type}Prompt${n}`).textContent = text;
+  const pfx = type==='char' ? 'c' : 'b';
+  ['copy','gemini','canva'].forEach(id => {
+    document.getElementById(`${pfx}${n}${id}`).style.display = 'inline-flex';
+  });
+}
+
+function copyImg2Prompt(type, n) {
+  const text = img2Prompts[type][n] || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const pfx = type==='char' ? 'c' : 'b';
+    const btn = document.getElementById(`${pfx}${n}copy`);
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => btn.textContent = '📋 복사', 2000);
+  });
+}
+
+function openImg2(tool, type, n) {
+  const url = tool === 'gemini'
+    ? 'https://labs.google/fx/tools/image-fx'
+    : 'https://www.canva.com/ai-image-generator/';
+  window.open(url, '_blank');
+}
+
+function triggerImg2(inputId) {
+  document.getElementById(inputId).click();
+}
+
+function previewImg2(input, areaId) {
+  if(!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  const iid = input.id;
+  reader.onload = function(e) {
+    const area = document.getElementById(areaId);
+    area.innerHTML = `<img src="${e.target.result}" alt="이미지"><button onclick="removeImg2(event,'${areaId}','${iid}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;">✕</button>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeImg2(e, areaId, inputId) {
+  e.stopPropagation();
+  const area = document.getElementById(areaId);
+  area.innerHTML = `<input type="file" id="${inputId}" accept="image/*" style="display:none" onchange="previewImg2(this,'${areaId}')"><span style="font-size:12px;color:#AABBD0;">🖼️ 만든 이미지 올리기</span>`;
+}
+
+function showGallery() {
+  document.getElementById('gallerySection').style.display = 'block';
+  const charLabelsShort = ['🧒 주인공','🤝 조력자','🦹 방해 인물'];
+  const bgLabelShort = ['🌅 1컷(기)','⚡ 2컷(승)','🔥 3컷(전)','🌈 4컷(결)'];
+
+  let charHTML = '';
+  [1,2,3].forEach((n,i) => {
+    const area = document.getElementById('charUpload'+n);
+    const img = area ? area.querySelector('img') : null;
+    charHTML += `<div class="gallery-img-card">${img ? `<img src="${img.src}">` : `<div style="height:140px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;color:#AABBD0;">이미지 없음</div>`}<div class="gallery-img-label">${charLabelsShort[i]}</div></div>`;
+  });
+
+  let bgHTML = '';
+  [1,2,3,4].forEach((n,i) => {
+    const area = document.getElementById('bgUpload'+n);
+    const img = area ? area.querySelector('img') : null;
+    bgHTML += `<div class="gallery-img-card">${img ? `<img src="${img.src}">` : `<div style="height:140px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;color:#AABBD0;">이미지 없음</div>`}<div class="gallery-img-label">${bgLabelShort[i]}</div></div>`;
+  });
+
+  document.getElementById('galleryChars').innerHTML = charHTML;
+  document.getElementById('galleryBgs').innerHTML = bgHTML;
+  document.getElementById('gallerySection').scrollIntoView({behavior:'smooth'});
 }
 </script>
 </body>
