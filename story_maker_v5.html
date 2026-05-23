@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 활용 이야기 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky:#F2F8FF; --white:#FFFFFF; --ink:#2C2C3A; --ink-soft:#5A5A72; --border:#D8E4F2;
+  --purple:#7B6CF6; --purple-light:#EDE9FF; --purple-dark:#3C3489;
+  --teal:#38C9A0; --teal-light:#D9F7EE; --teal-dark:#0a6b50;
+  --coral:#FF7B6B; --coral-light:#FFECE9; --coral-dark:#C4402E;
+  --amber:#F9A825; --amber-light:#FFF3D0; --amber-dark:#854F0B;
+  --r:14px; --r-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--sky);color:var(--ink);min-height:100vh}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:14px;font-family:'Noto Sans KR',sans-serif;resize:none;background:var(--white);color:var(--ink);line-height:1.7}
+textarea:focus{outline:none;border-color:var(--purple)}
+textarea::placeholder{color:#AABBD0}
+input[type=text]{border:1.5px solid var(--border);border-radius:99px;padding:8px 16px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--purple)}
+
+/* 버튼 */
+.btn{padding:10px 18px;border-radius:var(--r-sm);border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-purple{background:var(--purple);color:white}.btn-purple:hover{background:#6458e0}
+.btn-purple:disabled{opacity:0.4;cursor:not-allowed}
+.btn-teal{background:var(--teal);color:white}.btn-teal:hover{background:#28b08b}
+.btn-outline{background:var(--white);border:1.5px solid var(--border)!important;color:var(--ink-soft)}.btn-outline:hover{background:var(--sky)}
+.btn-ai{background:var(--purple-light);border:1.5px solid var(--purple)!important;color:var(--purple-dark);font-size:12px;padding:7px 14px;border-radius:99px}.btn-ai:hover{background:var(--purple);color:white}
+.btn-full{width:100%;justify-content:center}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+
+/* 카드 */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:14px}
+.card-label{font-size:13px;color:var(--ink-soft);font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.icon-badge{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.ai-box{border-radius:var(--r-sm);padding:12px 14px;font-size:13px;line-height:1.75;margin-top:8px;display:none;animation:fadeIn 0.3s}
+.ai-box.show{display:block}
+.ai-hint{font-size:12px;color:#AABBD0;margin-top:6px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* 스텝 네비 */
+.step-nav{display:flex;gap:0;padding:20px 28px 0;max-width:760px;margin:0 auto}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-item:not(:last-child)::after{content:'';position:absolute;top:18px;right:-50%;width:100%;height:2px;background:var(--border);z-index:0}
+.step-item.done:not(:last-child)::after{background:var(--teal)}
+.step-dot{width:36px;height:36px;border-radius:50%;background:var(--white);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ink-soft);position:relative;z-index:1;transition:all 0.3s}
+.step-item.active .step-dot{background:var(--purple);border-color:var(--purple);color:white}
+.step-item.done .step-dot{background:var(--teal);border-color:var(--teal);color:white}
+.step-label{font-size:11px;color:var(--ink-soft);margin-top:6px;text-align:center}
+.step-item.active .step-label{color:var(--purple);font-weight:500}
+.step-item.done .step-label{color:var(--teal)}
+
+/* 4컷 그리드 */
+.scene-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.scene-card{border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--white)}
+.scene-head{padding:7px 12px;font-size:11px;font-weight:700}
+.s1{background:#EDE9FF;color:#5840D8}
+.s2{background:var(--coral-light);color:var(--coral-dark)}
+.s3{background:var(--amber-light);color:var(--amber-dark)}
+.s4{background:var(--teal-light);color:var(--teal-dark)}
+.scene-body{padding:8px}
+.scene-body textarea{min-height:90px;font-size:13px;background:var(--sky)}
+
+/* 이미지 업로드 */
+.img-upload{border:1.5px dashed var(--border);border-radius:var(--r-sm);height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:6px;background:var(--sky);overflow:hidden;position:relative;transition:border-color 0.2s}
+.img-upload:hover{border-color:var(--purple)}
+.img-upload img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.img-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;z-index:2}
+
+/* 저장바 */
+.save-bar{max-width:760px;margin:10px auto 0;padding:0 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* 인트로 */
+#introScreen{min-height:100vh;background:linear-gradient(160deg,#EDE9FF 0%,#D9F7EE 100%);display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.intro-wrap{max-width:500px;width:100%;text-align:center}
+.intro-card{background:white;border-radius:20px;padding:24px;margin-bottom:16px;text-align:left;box-shadow:0 4px 24px rgba(123,108,246,0.1)}
+.char-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.char-icon{width:38px;height:38px;min-width:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.char-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.char-desc{font-size:12px;line-height:1.6}
+.todo-card{background:white;border-radius:16px;padding:16px 20px;margin-bottom:20px;text-align:left;box-shadow:0 4px 24px rgba(56,201,160,0.1)}
+.todo-item{font-size:12px;color:var(--ink-soft);padding:4px 0;display:flex;gap:8px;align-items:center}
+.todo-num{width:20px;height:20px;min-width:20px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* 완성 화면 */
+.final-wrap{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.final-header{background:linear-gradient(135deg,#EDE9FF,#D9F7EE);padding:18px 22px}
+.final-scene{padding:14px 22px;border-bottom:1px solid var(--border)}
+.final-scene:last-child{border-bottom:none}
+.final-badge{display:inline-block;background:var(--purple);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:8px}
+
+/* 프롬프트 섹션 */
+.prompt-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:12px}
+.prompt-box{background:var(--purple-light);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;color:var(--purple-dark);line-height:1.7;margin:8px 0;white-space:pre-wrap;min-height:44px}
+.tool-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tool-btn{padding:9px 16px;border-radius:var(--r-sm);border:1.5px solid;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s}
+.tool-btn-gpt{border-color:#19C37D;background:#E8FBF4;color:#0a6b3a}.tool-btn-gpt:hover{background:#19C37D;color:white}
+.tool-btn-canva{border-color:#7B61FF;background:#F0EEFF;color:#4B3ACC}.tool-btn-canva:hover{background:#7B61FF;color:white}
+
+/* 붙여넣기 기능 */
+.paste-area{border:1.5px dashed var(--teal);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--teal-light);color:var(--ink);min-height:70px;resize:none;width:100%}
+.paste-area:focus{outline:none;border-color:var(--teal-dark)}
+.cut-select{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.cut-chip{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;transition:all 0.15s}
+.cut-chip.selected{border-color:var(--teal);background:var(--teal-light);color:var(--teal-dark);font-weight:500}
+
+/* 앱2 */
+.img-tab{flex:1;padding:10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s}
+.img-tab.active{background:var(--teal-light);border-color:var(--teal);color:var(--teal-dark)}
+.img2-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:12px}
+.img2-upload{border:1.5px dashed var(--border);border-radius:var(--r-sm);height:130px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:10px;background:var(--sky);overflow:hidden;position:relative;transition:border-color 0.2s}
+.img2-upload:hover{border-color:var(--teal)}
+.img2-upload img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.story-summary{background:var(--sky);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:16px}
+.summary-toggle{font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.summary-content{display:none;margin-top:12px}
+.summary-content.open{display:block}
+
+/* 인쇄 */
+@media print{
+  #introScreen,header,.save-bar,.step-nav,.btn-row,.btn,#step1,#step2,#step3,#step4,#step5 .btn-row{display:none!important}
+  #step5{display:block!important}
+  .final-wrap{border:none!important}
+  body{background:white}
+}
+</style>
+</head>
+<body>
+
+<!-- 인트로 화면 -->
+<div id="introScreen">
+  <div class="intro-wrap">
+    <div style="font-size:56px;margin-bottom:14px;">📚</div>
+    <h1 style="font-family:'Gaegu',cursive;font-size:28px;color:var(--purple-dark);font-weight:700;margin-bottom:6px;">AI 활용 이야기 만들기</h1>
+    <p style="font-size:12px;color:var(--purple);margin-bottom:28px;">© 쑥선생</p>
+
+    <div class="intro-card">
+      <p style="font-size:15px;font-weight:700;color:var(--purple-dark);margin-bottom:16px;text-align:center;">✍️ 시작 전에 먼저 알아봐요!</p>
+      <div class="char-row">
+        <div class="char-icon" style="background:#EDE9FF;">🧒</div>
+        <div>
+          <div class="char-title" style="color:var(--purple-dark);">주인공 — 이야기의 중심 인물</div>
+          <div class="char-desc" style="color:var(--purple);">이야기를 이끌어가는 가장 중요한 인물이에요. 이름, 성격, 능력을 먼저 생각해봐요!</div>
+        </div>
+      </div>
+      <div class="char-row">
+        <div class="char-icon" style="background:var(--teal-light);">🤝</div>
+        <div>
+          <div class="char-title" style="color:var(--teal-dark);">조력자 — 도와주는 인물</div>
+          <div class="char-desc" style="color:#1a9e78;">주인공이 어려울 때 함께하는 친구나 동료예요. 없어도 괜찮아요!</div>
+        </div>
+      </div>
+      <div class="char-row" style="margin-bottom:0">
+        <div class="char-icon" style="background:var(--coral-light);">🦹</div>
+        <div>
+          <div class="char-title" style="color:var(--coral-dark);">빌런 — 방해하는 인물 또는 상황</div>
+          <div class="char-desc" style="color:var(--coral-dark);">나쁜 사람일 수도 있고, 어려운 상황이나 자연재해일 수도 있어요!</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 16px;background:#F2F8FF;border-radius:12px;border-left:3px solid var(--purple);">
+        <p style="font-size:12px;color:var(--purple);line-height:1.7;margin:0;">💡 <strong>순서 팁!</strong> 인물을 먼저 정하고 이미지를 만들면, 내 캐릭터를 보면서 이야기를 쓸 수 있어요!</p>
+      </div>
+    </div>
+
+    <div class="todo-card">
+      <p style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:10px;">📋 오늘 만들 것들</p>
+      <div class="todo-item"><div class="todo-num">①</div>등장인물 설정 (주인공 · 조력자 · 빌런)</div>
+      <div class="todo-item"><div class="todo-num">②</div>캐릭터 이미지 만들기</div>
+      <div class="todo-item"><div class="todo-num">③</div>배경 정하기</div>
+      <div class="todo-item"><div class="todo-num">④</div>사건 만들기</div>
+      <div class="todo-item"><div class="todo-num">⑤</div>기승전결 4컷 이야기 완성</div>
+      <div class="todo-item"><div class="todo-num">⑥</div>배경 이미지 만들기</div>
+    </div>
+
+    <input id="introName" type="text" placeholder="✏️ 이름 또는 닉네임 입력 (선택)" style="width:240px;text-align:center;margin-bottom:14px;">
+    <br>
+    <button onclick="startApp()" class="btn btn-purple btn-full" style="border-radius:99px;padding:15px;font-size:16px;box-shadow:0 4px 16px rgba(123,108,246,0.35);">✏️ 이야기 만들기 시작!</button>
+  </div>
+</div>
+
+<!-- 메인 앱 -->
+<div id="mainApp" style="display:none;">
+
+<header style="background:var(--white);border-bottom:1.5px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;">
+  <div style="width:40px;height:40px;background:var(--purple-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">📚</div>
+  <div>
+    <div style="font-family:'Gaegu',cursive;font-size:20px;color:var(--purple);font-weight:700;line-height:1;">AI 활용 이야기 만들기</div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:1px;">© 쑥선생</div>
+  </div>
+</header>
+
+<!-- 저장바 -->
+<div class="save-bar">
+  <input id="studentName" type="text" placeholder="✏️ 이름 또는 닉네임" style="width:140px;font-size:12px;padding:6px 12px;">
+  <button class="btn btn-teal" style="font-size:12px;padding:6px 14px;" onclick="saveToLocal()">💾 저장</button>
+  <button class="btn btn-outline" style="font-size:12px;padding:6px 14px;" onclick="exportJSON()">📤 내보내기</button>
+  <label class="btn btn-outline" style="font-size:12px;padding:6px 14px;cursor:pointer;">📥 불러오기<input type="file" accept=".json" onchange="importJSON(this)" style="display:none;"></label>
+  <span id="saveMsg" style="font-size:12px;color:var(--teal);display:none;">✅ 저장됐어요!</span>
+</div>
+
+<!-- 스텝 네비 -->
+<div class="step-nav">
+  <div class="step-item active" id="sn1"><div class="step-dot">1</div><div class="step-label">등장인물·배경</div></div>
+  <div class="step-item" id="sn2"><div class="step-dot">2</div><div class="step-label">사건 발생</div></div>
+  <div class="step-item" id="sn3"><div class="step-dot">3</div><div class="step-label">주요 흐름</div></div>
+  <div class="step-item" id="sn4"><div class="step-dot">4</div><div class="step-label">이미지 만들기</div></div>
+  <div class="step-item" id="sn5"><div class="step-dot">✓</div><div class="step-label">완성!</div></div>
+</div>
+
+<main style="max-width:760px;margin:20px auto 60px;padding:0 20px;">
+
+  <div style="background:var(--purple-light);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;line-height:1.75;">
+    <p style="font-size:14px;font-weight:500;color:var(--purple-dark);margin-bottom:4px;">✏️ 질문에 답하다 보면 나만의 이야기가 완성돼요!</p>
+    <p style="font-size:12px;color:var(--purple);">막히거나 아이디어가 필요하면 <strong>✨ AI한테 힌트 받기</strong> 버튼을 눌러봐요!</p>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:#EDE9FF;">🧒</span>주인공은 누구예요?</div>
+      <textarea id="char" rows="3" placeholder="예) 용감한 소녀 지아, 말하는 고양이 뭉치, 작은 로봇 핑…&#10;이름, 특징, 능력 같은 걸 자유롭게 써봐요!"></textarea>
+      <button class="btn btn-ai" onclick="askAI('char')">✨ AI 힌트 받기</button>
+      <div class="ai-box" id="ai-char" style="background:var(--purple-light);border:1px solid #C8C0FF;color:var(--purple-dark);"></div>
+      <div class="ai-hint">AI가 주인공 아이디어를 줄게요. 참고해서 내 말로 써봐요!</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--teal-light);">🤝</span>도와주는 인물 (조력자) — 없어도 괜찮아요!</div>
+      <textarea id="helper" rows="2" placeholder="예) 지혜로운 할머니 요정, 말 못하는 아기 용…"></textarea>
+      <button class="btn btn-ai" onclick="askAI('helper')">✨ AI 힌트 받기</button>
+      <div class="ai-box" id="ai-helper" style="background:var(--teal-light);border:1px solid #90E0C8;color:var(--teal-dark);"></div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--coral-light);">🦹</span>방해하는 인물 또는 환경 (빌런) — 없어도 괜찮아요!</div>
+      <textarea id="obstacle" rows="2" placeholder="예) 심술궂은 마법사, 무서운 폭풍, 아무도 믿어주지 않는 상황…"></textarea>
+      <button class="btn btn-ai" onclick="askAI('obstacle')">✨ AI 힌트 받기</button>
+      <div class="ai-box" id="ai-obstacle" style="background:var(--coral-light);border:1px solid #F0997B;color:var(--coral-dark);"></div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--teal-light);">🗺️</span>어디에서 이야기가 시작돼요?</div>
+      <textarea id="place" rows="3" placeholder="예) 구름 위에 있는 작은 마을, 깊은 숲속 오두막, 미래의 우주 정거장…"></textarea>
+      <button class="btn btn-ai" onclick="askAI('place')">✨ AI 힌트 받기</button>
+      <div class="ai-box" id="ai-place" style="background:var(--teal-light);border:1px solid #90E0C8;color:var(--teal-dark);"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-purple btn-full" onclick="goStep(2)">다음 → 사건 만들기</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" style="display:none;">
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--coral-light);">⚡</span>어떤 사건이 생겼어요?</div>
+      <textarea id="problem" rows="4" placeholder="예) 마을에서 색깔이 사라지기 시작했어요.&#10;친구가 이상한 곳으로 끌려갔어요.&#10;갑자기 수상한 문이 나타났어요…"></textarea>
+      <button class="btn btn-ai" onclick="askAI('problem')">✨ AI 힌트 받기</button>
+      <div class="ai-box" id="ai-problem" style="background:var(--coral-light);border:1px solid #F0997B;color:var(--coral-dark);"></div>
+      <div class="ai-hint">등장인물과 배경을 보고 AI가 재미있는 사건을 제안해줄게요!</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--amber-light);">💡</span>어떻게 해결할 것 같아요? (힌트만 써도 OK!)</div>
+      <textarea id="solution" rows="3" placeholder="예) 용기를 내서 혼자 맞서요&#10;친구들과 힘을 합쳐요&#10;숨겨진 특별한 능력을 발견해요…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="goStep(1)">← 돌아가기</button>
+      <button class="btn btn-purple btn-full" onclick="goStep(3)">다음 → 주요 흐름 쓰기</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3" style="display:none;">
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--teal-light);">✨</span>AI가 4컷 주요 흐름을 만들어줄게요!</div>
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:10px;">버튼을 누르면 ChatGPT가 열리면서 기승전결 4컷을 만들어줘요.<br>
+      만들어준 내용을 참고해서 아래 칸에 내 말로 써봐요 ✏️</p>
+      <div style="background:var(--amber-light);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--amber-dark);margin-bottom:12px;line-height:1.6;">
+        💡 <strong>ChatGPT 안내</strong> — 로그인 없이도 사용할 수 있어요!<br>
+        단, 이야기를 이어서 수정하거나 다시 물어보려면 <strong>로그인이 필요해요.</strong> 같은 채팅창을 닫지 마세요!
+      </div>
+      <button class="btn btn-teal btn-full" id="btnMakeScenes" onclick="makeScenes()">🎬 ChatGPT로 4컷 만들기</button>
+      <div id="scenesGuide" style="display:none;background:var(--teal-light);border-radius:var(--r-sm);padding:10px 14px;margin-top:10px;font-size:13px;color:var(--teal-dark);">
+        💬 ChatGPT 창이 열렸어요! AI가 만들어준 내용을 아래 붙여넣기 칸에 복사해봐요 ✏️
+      </div>
+    </div>
+
+    <!-- AI 붙여넣기 반영 — 4컷 위 -->
+    <div class="card">
+      <div class="card-label"><span class="icon-badge" style="background:var(--amber-light);">💬</span>AI 답변을 받았나요? 여기에 붙여넣고 컷을 선택해서 반영해봐요!</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <textarea class="paste-area" id="pasteArea" rows="4" placeholder="ChatGPT 답변을 복사해서 여기에 붙여넣어요…&#10;또는 AI한테 물어볼 내용을 직접 써도 돼요!" style="flex:1;"></textarea>
+        <button onclick="clearField('pasteArea')" title="전체 삭제" style="align-self:flex-start;padding:6px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--white);color:#AABBD0;font-size:13px;cursor:pointer;white-space:nowrap;">🗑️</button>
+      </div>
+      <div style="font-size:12px;color:var(--ink-soft);margin:8px 0 4px;">어느 컷에 반영할까요?</div>
+      <div class="cut-select">
+        <div class="cut-chip" onclick="selectCut(this,'sc1')">🌅 1컷</div>
+        <div class="cut-chip" onclick="selectCut(this,'sc2')">⚡ 2컷</div>
+        <div class="cut-chip" onclick="selectCut(this,'sc3')">🔥 3컷</div>
+        <div class="cut-chip" onclick="selectCut(this,'sc4')">🌈 4컷</div>
+      </div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn btn-teal" onclick="applyPaste()">✅ 선택한 컷에 반영하기</button>
+        <button class="btn btn-ai" onclick="askExtra()">✨ ChatGPT에 물어보기</button>
+      </div>
+      <div id="pasteMsg" style="display:none;font-size:12px;color:var(--teal);margin-top:6px;"></div>
+    </div>
+
+    <div class="scene-grid">
+      <div class="scene-card">
+        <div class="scene-head s1" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🌅 1컷 — 기 (시작)</span>
+          <button onclick="clearField('sc1')" title="전체 삭제" style="background:none;border:none;color:rgba(88,64,216,0.5);font-size:12px;cursor:pointer;">🗑️</button>
+        </div>
+        <div class="scene-body">
+          <textarea id="sc1" rows="5" placeholder="이야기가 어떻게 시작되나요?"></textarea>
+        </div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-head s2" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>⚡ 2컷 — 승 (사건)</span>
+          <button onclick="clearField('sc2')" title="전체 삭제" style="background:none;border:none;color:rgba(196,64,46,0.5);font-size:12px;cursor:pointer;">🗑️</button>
+        </div>
+        <div class="scene-body">
+          <textarea id="sc2" rows="5" placeholder="문제가 터졌어요!"></textarea>
+        </div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-head s3" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🔥 3컷 — 전 (해결 시도)</span>
+          <button onclick="clearField('sc3')" title="전체 삭제" style="background:none;border:none;color:rgba(133,79,11,0.5);font-size:12px;cursor:pointer;">🗑️</button>
+        </div>
+        <div class="scene-body">
+          <textarea id="sc3" rows="5" placeholder="어떻게 해결하려고 했나요?"></textarea>
+        </div>
+      </div>
+      <div class="scene-card">
+        <div class="scene-head s4" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🌈 4컷 — 결 (결말)</span>
+          <button onclick="clearField('sc4')" title="전체 삭제" style="background:none;border:none;color:rgba(10,107,80,0.5);font-size:12px;cursor:pointer;">🗑️</button>
+        </div>
+        <div class="scene-body">
+          <textarea id="sc4" rows="5" placeholder="어떻게 끝났나요?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="goStep(2)">← 돌아가기</button>
+      <button class="btn btn-teal btn-full" onclick="goStep(4)">다음 → 이미지 만들기</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 이미지 만들기 -->
+  <div id="step4" style="display:none;">
+    <div style="background:var(--teal-light);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;line-height:1.75;">
+      <p style="font-size:14px;font-weight:500;color:var(--teal-dark);margin-bottom:4px;">🎨 캐릭터 3명 + 장면 4컷 이미지를 만들어봐요!</p>
+      <p style="font-size:12px;color:#1a9e78;">각 칸마다 ① 설명 확인 → ② 프롬프트 만들기 → ③ 이미지 생성 → ④ 이미지 올리기 순서로 해봐요!</p>
+    </div>
+
+    <!-- 주인공 -->
+    <div style="background:#EDE9FF;border:1.5px solid #EDE9FF;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#5840D8;margin-bottom:10px;">🧒 주인공 캐릭터</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:4px;">① 캐릭터 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="charPreview1">(1단계에서 쓴 주인공 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeCharPrompt(1)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="charPromptBox1" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="charTool1">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','char1')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','char1')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('char1')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="charArea1" onclick="triggerImgUpload('charImg1')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="charImg1" accept="image/*" style="display:none" onchange="previewImg(this,'charArea1')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 조력자 -->
+    <div style="background:#D9F7EE;border:1.5px solid #D9F7EE;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#0a6b50;margin-bottom:10px;">🤝 조력자 캐릭터</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:4px;">① 캐릭터 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="charPreview2">(1단계에서 쓴 조력자 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeCharPrompt(2)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="charPromptBox2" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="charTool2">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','char2')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','char2')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('char2')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="charArea2" onclick="triggerImgUpload('charImg2')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="charImg2" accept="image/*" style="display:none" onchange="previewImg(this,'charArea2')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 빌런 -->
+    <div style="background:#FFECE9;border:1.5px solid #FFECE9;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#C4402E;margin-bottom:10px;">🦹 빌런 캐릭터</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:4px;">① 캐릭터 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="charPreview3">(1단계에서 쓴 빌런 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeCharPrompt(3)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="charPromptBox3" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="charTool3">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','char3')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','char3')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('char3')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="charArea3" onclick="triggerImgUpload('charImg3')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="charImg3" accept="image/*" style="display:none" onchange="previewImg(this,'charArea3')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1컷 -->
+    <div style="background:#EDE9FF;border:1.5px solid #EDE9FF;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#5840D8;margin-bottom:10px;">🌅 1컷(기) — 시작 장면</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:4px;">① 컷 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="sc1Preview4">(3단계에서 쓴 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeScenePrompt(1)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="scenePrompt1" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="sceneTool1">
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','scene1')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','scene1')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('scene1')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#5840D8;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="imgArea1" onclick="triggerImgUpload('img1')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="img1" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea1')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2컷 -->
+    <div style="background:#FFECE9;border:1.5px solid #FFECE9;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#C4402E;margin-bottom:10px;">⚡ 2컷(승) — 사건 장면</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:4px;">① 컷 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="sc2Preview4">(3단계에서 쓴 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeScenePrompt(2)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="scenePrompt2" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="sceneTool2">
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','scene2')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','scene2')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('scene2')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#C4402E;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="imgArea2" onclick="triggerImgUpload('img2')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="img2" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea2')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3컷 -->
+    <div style="background:#FFF3D0;border:1.5px solid #FFF3D0;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:10px;">🔥 3컷(전) — 해결 시도 장면</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#854F0B;font-weight:500;margin-bottom:4px;">① 컷 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="sc3Preview4">(3단계에서 쓴 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#854F0B;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeScenePrompt(3)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="scenePrompt3" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="sceneTool3">
+        <div style="font-size:11px;color:#854F0B;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','scene3')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','scene3')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('scene3')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#854F0B;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="imgArea3" onclick="triggerImgUpload('img3')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="img3" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea3')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4컷 -->
+    <div style="background:#D9F7EE;border:1.5px solid #D9F7EE;border-radius:var(--r);padding:16px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#0a6b50;margin-bottom:10px;">🌈 4컷(결) — 결말 장면</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:4px;">① 컷 설명</div>
+        <div style="background:white;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink);line-height:1.6;" id="sc4Preview4">(3단계에서 쓴 내용이 여기 나와요)</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">② 이미지 프롬프트 만들기</div>
+        <button class="btn btn-ai" style="font-size:12px;padding:6px 14px;" onclick="makeScenePrompt(4)">✨ 프롬프트 만들기</button>
+        <div class="prompt-box" id="scenePrompt4" style="margin-top:8px;font-size:12px;background:white;">버튼을 눌러요!</div>
+      </div>
+      <div style="margin-bottom:10px;display:none;" id="sceneTool4">
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">③ 이미지 생성하러 가기</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn tool-btn-gpt" style="font-size:12px;padding:7px 14px;" onclick="openTool('gpt','scene4')">💬 ChatGPT</button>
+          <button class="tool-btn tool-btn-canva" style="font-size:12px;padding:7px 14px;" onclick="openTool('canva','scene4')">🎨 캔바 AI</button>
+          <button class="btn btn-ai" style="font-size:11px;padding:5px 10px;" onclick="copyPrompt('scene4')">📋 복사</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#0a6b50;font-weight:500;margin-bottom:6px;">④ 만든 이미지 올리기</div>
+        <div class="img-upload" id="imgArea4" onclick="triggerImgUpload('img4')" style="height:130px;background:rgba(255,255,255,0.7);">
+          <input type="file" id="img4" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea4')">
+          <span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="goStep(3)">← 돌아가기</button>
+      <button class="btn btn-teal btn-full" onclick="goStep(5)">✨ 완성하기!</button>
+    </div>
+  </div>
+
+  <!-- STEP 5 완성 -->
+  <div id="step5" style="display:none;">
+    <div class="final-wrap" id="finalWrap"></div>
+    <div class="btn-row" style="flex-direction:column;gap:8px;">
+      <button class="btn btn-outline btn-full" onclick="window.print()">🖨️ 인쇄하기</button>
+      <button class="btn btn-outline btn-full" onclick="copyStory()">📋 텍스트 복사 (캔바용)</button>
+      <div id="copyMsg" style="display:none;font-size:12px;color:var(--teal);text-align:center;">✅ 복사됐어요!</div>
+      <button class="btn btn-outline btn-full" onclick="goStep(4)">← 다시 고치기</button>
+    </div>
+  </div>
+
+</main>
+</div><!-- /mainApp -->
+
+<script>
+const SAVE_KEY = 'story_maker_v5';
+const FIELDS = ['char','helper','obstacle','place','problem','solution','sc1','sc2','sc3','sc4'];
+let currentStep = 1;
+let selectedCut = null;
+let prompts = {};
+
+// ===== 시작 =====
+function startApp() {
+  const name = document.getElementById('introName').value.trim();
+  if (name) document.getElementById('studentName').value = name;
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function clearField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.value && !confirm('내용을 모두 지울까요?')) return;
+  el.value = '';
+  el.focus();
+}
+
+// ===== 스텝 =====
+function goStep(n) {
+  [1,2,3,4,5].forEach(i => {
+    const el = document.getElementById('step'+i);
+    if (el) el.style.display = i===n ? 'block' : 'none';
+    const sn = document.getElementById('sn'+i);
+    if (sn) {
+      sn.className = 'step-item' + (i===n?' active':i<n?' done':'');
+      const dot = sn.querySelector('.step-dot');
+      dot.textContent = i < n ? '✓' : i === 5 ? '✓' : i;
+    }
+  });
+  currentStep = n;
+  if (n === 4) fillScenePreviews();
+  if (n === 5) buildFinal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function fillScenePreviews() {
+  const charData = [getVal('char'), getVal('helper'), getVal('obstacle')];
+  const charLabels = ['주인공','조력자','빌런'];
+  [1,2,3].forEach(n => {
+    const el = document.getElementById('charPreview'+n);
+    if (el) el.textContent = charData[n-1] || `(1단계에서 ${charLabels[n-1]} 내용을 써주세요)`;
+  });
+  ['sc1','sc2','sc3','sc4'].forEach((id,i) => {
+    const el = document.getElementById(id+'Preview4');
+    if (el) el.textContent = getVal(id) || '(3단계에서 내용을 써주세요)';
+  });
+}
+
+function getVal(id) { return (document.getElementById(id)||{value:''}).value.trim(); }
+
+// ===== ChatGPT 연결 =====
+function openChatGPT(prompt) {
+  window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
+}
+
+function showAIGuide(boxId, prompt) {
+  const box = document.getElementById(boxId);
+  box.innerHTML = '<strong>💬 ChatGPT 창이 열렸어요!</strong><br>AI 아이디어를 참고해서 왼쪽 칸에 내 말로 써봐요 ✏️';
+  box.classList.add('show');
+  openChatGPT(prompt);
+}
+
+function askAI(type) {
+  const char = getVal('char'), helper = getVal('helper'), obstacle = getVal('obstacle'), place = getVal('place');
+  const prompts = {
+    char: '초등학생 이야기의 주인공 캐릭터 아이디어를 3개 알려줘. 이름과 특징을 한 문장씩 번호 붙여서.',
+    helper: `주인공: "${char||'미정'}". 이 주인공을 도와주는 조력자 캐릭터 3개를 알려줘. 한 문장씩 번호 붙여서.`,
+    obstacle: `주인공: "${char||'미정'}", 배경: "${place||'미정'}". 이야기를 긴장감 있게 만드는 방해 인물이나 환경 3개를 알려줘. 한 문장씩 번호 붙여서.`,
+    place: `주인공: "${char||'미정'}". 이 인물에게 어울리는 배경 장소 3개를 알려줘. 한 문장씩 번호 붙여서.`,
+    problem: `주인공: "${char||'미정'}", 조력자: "${helper||'없음'}", 빌런: "${obstacle||'없음'}", 배경: "${place||'미정'}". 재미있는 사건 3개를 알려줘. 한 문장씩 번호 붙여서.`
+  };
+  showAIGuide('ai-'+type, prompts[type]);
+}
+
+// ===== 4컷 만들기 =====
+function makeScenes() {
+  const prompt = `초등학생 이야기를 기승전결 4컷으로 만들어줘.
+주인공: ${getVal('char')||'(미정)'}
+조력자: ${getVal('helper')||'없음'}
+빌런/방해요소: ${getVal('obstacle')||'없음'}
+배경: ${getVal('place')||'(미정)'}
+사건: ${getVal('problem')||'(미정)'}
+해결 힌트: ${getVal('solution')||'(미정)'}
+
+⚠️ 이미지 생성 금지! 반드시 텍스트로만 답해줘.
+
+형식:
+[1컷] 기 — 시작 (2~3문장)
+[2컷] 승 — 사건 (2~3문장)
+[3컷] 전 — 해결 시도 (2~3문장)
+[4컷] 결 — 결말 (2~3문장)`;
+  document.getElementById('scenesGuide').style.display = 'block';
+  openChatGPT(prompt);
+}
+
+// ===== 붙여넣기 반영 =====
+function selectCut(el, cutId) {
+  document.querySelectorAll('.cut-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCut = cutId;
+}
+
+function applyPaste() {
+  const text = document.getElementById('pasteArea').value.trim();
+  const msg = document.getElementById('pasteMsg');
+  if (!text) { msg.textContent = '⚠️ 붙여넣을 내용을 입력해줘요!'; msg.style.display='block'; return; }
+  if (!selectedCut) { msg.textContent = '⚠️ 반영할 컷을 선택해줘요!'; msg.style.display='block'; return; }
+  document.getElementById(selectedCut).value = text;
+  msg.textContent = '✅ 반영됐어요!';
+  msg.style.color = 'var(--teal)';
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display='none', 2500);
+}
+
+function askExtra() {
+  const q = document.getElementById('pasteArea').value.trim();
+  if (!q) return;
+  const sc1=getVal('sc1'),sc2=getVal('sc2'),sc3=getVal('sc3'),sc4=getVal('sc4');
+  const prompt = `내 이야기:\n1컷: ${sc1||'없음'}\n2컷: ${sc2||'없음'}\n3컷: ${sc3||'없음'}\n4컷: ${sc4||'없음'}\n\n질문: ${q}\n\n위 이야기를 바탕으로 쉽고 재미있게 3~5문장으로 답해줘.`;
+  openChatGPT(prompt);
+}
+
+// ===== 이미지 업로드 =====
+function triggerImgUpload(id) { document.getElementById(id).click(); }
+function previewImg(input, areaId) {
+  if (!input.files||!input.files[0]) return;
+  const iid = input.id;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const area = document.getElementById(areaId);
+    area.innerHTML = `<img src="${e.target.result}" alt="장면 이미지"><button class="img-remove" onclick="removeImg(event,'${areaId}','${iid}')">✕</button>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function removeImg(e, areaId, inputId) {
+  e.stopPropagation();
+  document.getElementById(areaId).innerHTML = `<input type="file" id="${inputId}" accept="image/*" style="display:none" onchange="previewImg(this,'${areaId}')"><span style="font-size:12px;color:#AABBD0;">🖼️ 이미지 올리기</span>`;
+}
+
+// ===== 완성 화면 =====
+function buildFinal() {
+  const name = getVal('studentName') || '';
+  const char = getVal('char')||'(미입력)', helper=getVal('helper')||'없음', obstacle=getVal('obstacle')||'없음', place=getVal('place')||'(미입력)';
+  const scenes = [
+    {label:'🌅 1컷 — 기 (시작)',bg:'#EDE9FF',tc:'#5840D8',bd:'#AFA9EC',text:getVal('sc1'),n:1},
+    {label:'⚡ 2컷 — 승 (사건)',bg:'#FFECE9',tc:'#C4402E',bd:'#F0997B',text:getVal('sc2'),n:2},
+    {label:'🔥 3컷 — 전 (해결)',bg:'#FFF3D0',tc:'#854F0B',bd:'#EF9F27',text:getVal('sc3'),n:3},
+    {label:'🌈 4컷 — 결 (결말)',bg:'#D9F7EE',tc:'#0a6b50',bd:'#5DCAA5',text:getVal('sc4'),n:4},
+  ];
+  const imgs = [1,2,3,4].map(n => { const a=document.getElementById('imgArea'+n); const i=a?a.querySelector('img'):null; return i?i.src:null; });
+
+  document.getElementById('finalWrap').innerHTML = `
+    <div class="final-header">
+      <div class="final-badge">✨ 완성!</div>
+      <div style="font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--ink);margin:4px 0;">${name?name+'의 이야기':'나만의 이야기'}</div>
+      <div style="font-size:12px;color:var(--ink-soft);">주인공: ${char} · 조력자: ${helper} · 빌런: ${obstacle} · 배경: ${place}</div>
+    </div>
+    ${scenes.map((s,i) => `
+      <div class="final-scene">
+        <div style="background:${s.bg};color:${s.tc};font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:8px;">${s.label}</div>
+        <div style="display:flex;gap:12px;">
+          ${imgs[i]?`<img src="${imgs[i]}" style="width:120px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;">`:''}
+          <div style="font-size:13px;line-height:1.75;color:var(--ink);white-space:pre-wrap;">${s.text||'<span style="color:#AABBD0">내용 없음</span>'}</div>
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+// ===== 프롬프트 =====
+function korToEng(text) {
+  const map={'용감한':'brave','귀여운':'cute','신비로운':'mysterious','소녀':'girl','소년':'boy','고양이':'cat','강아지':'dog','로봇':'robot','마법사':'wizard','숲':'forest','마을':'village','바다':'sea','하늘':'sky','우주':'space','성':'castle'};
+  let r=text; Object.entries(map).forEach(([k,v])=>{r=r.replace(new RegExp(k,'g'),v)}); return r;
+}
+
+function makeCharPrompt(n) {
+  const charTexts = [getVal('char'), getVal('helper'), getVal('obstacle')];
+  const charTypes = ['hero','helper','villain'];
+  const raw = charTexts[n-1] || charTypes[n-1];
+  const text = `A cute cartoon character for children's book:
+Type: ${charTypes[n-1]}
+Description: ${korToEng(raw)}
+Full body, white background, simple friendly design, bright colors, no text`;
+  prompts['char'+n] = text;
+  document.getElementById('charPromptBox'+n).textContent = text;
+  document.getElementById('charTool'+n).style.display = 'block';
+}
+
+function makeScenePrompt(n) {
+  const scMap = {1:getVal('sc1'),2:getVal('sc2'),3:getVal('sc3'),4:getVal('sc4')};
+  const char = getVal('char');
+  const text = `Children's book illustration scene ${n}:
+Character: ${korToEng(char)||'main character'}
+Scene: ${korToEng((scMap[n]||'').slice(0,80))}
+Wide background, colorful, bright, friendly, no text`;
+  prompts['scene'+n] = text;
+  document.getElementById('scenePrompt'+n).textContent = text;
+  const toolEl = document.getElementById('sceneTool'+n);
+  if (toolEl) toolEl.style.display = 'block';
+}
+
+function openTool(tool, key) {
+  const prompt = prompts[key] || '';
+  if (tool === 'gpt') {
+    window.open('https://chatgpt.com/?q=' + encodeURIComponent('이 프롬프트로 이미지를 만들어줘:\n'+prompt), '_blank');
+  } else {
+    navigator.clipboard.writeText(prompt).then(() => {
+      window.open('https://www.canva.com/ai-image-generator/', '_blank');
+      alert('프롬프트가 복사됐어요! 캔바 AI 이미지 창에 붙여넣어봐요 😊');
+    });
+  }
+}
+
+function copyPrompt(key) {
+  navigator.clipboard.writeText(prompts[key]||'').then(() => alert('복사됐어요!'));
+}
+
+function copyStory() {
+  const name=getVal('studentName');
+  const text = `📖 ${name?name+'의 이야기':'나만의 이야기'}\n\n주인공: ${getVal('char')}\n조력자: ${getVal('helper')}\n빌런: ${getVal('obstacle')}\n배경: ${getVal('place')}\n\n🌅 1컷(기): ${getVal('sc1')}\n⚡ 2컷(승): ${getVal('sc2')}\n🔥 3컷(전): ${getVal('sc3')}\n🌈 4컷(결): ${getVal('sc4')}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const msg=document.getElementById('copyMsg');
+    msg.style.display='block';
+    setTimeout(()=>msg.style.display='none',2500);
+  });
+}
+
+// ===== 저장 =====
+function collectData() {
+  const data={step:currentStep,name:getVal('studentName')};
+  FIELDS.forEach(f=>{data[f]=getVal(f)});
+  return data;
+}
+function applyData(data) {
+  FIELDS.forEach(f=>{const el=document.getElementById(f);if(el&&data[f]!==undefined)el.value=data[f]});
+  if(data.name)document.getElementById('studentName').value=data.name;
+  if(data.step)goStep(data.step);
+}
+function saveToLocal() {
+  localStorage.setItem(SAVE_KEY,JSON.stringify(collectData()));
+  const name=getVal('studentName');
+  const msg=document.getElementById('saveMsg');
+  msg.textContent=name?`✅ ${name} 저장됐어요!`:'✅ 저장됐어요!';
+  msg.style.display='inline';
+  setTimeout(()=>msg.style.display='none',2500);
+}
+function exportJSON() {
+  const data=collectData();
+  const name=data.name||'이름없음';
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${name}_이야기_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importJSON(input) {
+  if(!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{applyData(JSON.parse(e.target.result));startApp();}catch{alert('파일을 읽을 수 없어요!')}};
+  reader.readAsText(input.files[0]);
+}
+
+// 자동 복원
+window.addEventListener('load',()=>{
+  const saved=localStorage.getItem(SAVE_KEY);
+  if(!saved)return;
+  try{
+    const data=JSON.parse(saved);
+    const hasContent=Object.keys(data).some(k=>k!=='step'&&k!=='name'&&data[k]);
+    if(!hasContent)return;
+    const name=data.name?`${data.name}의 `:'';
+    const toast=document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3C3489;color:white;padding:10px 20px;border-radius:99px;font-size:13px;z-index:999;display:flex;gap:10px;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-family:Noto Sans KR,sans-serif;white-space:nowrap;';
+    toast.innerHTML=`💾 저장된 ${name}이야기가 있어요! <button onclick="applyData(${JSON.stringify(data).replace(/"/g,'&quot;')});startApp();this.parentElement.remove();" style="background:white;color:#3C3489;border:none;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">불러오기</button> <button onclick="this.parentElement.remove();" style="background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:16px;cursor:pointer;">✕</button>`;
+    document.body.appendChild(toast);
+    setTimeout(()=>{if(toast.parentElement)toast.remove()},8000);
+  }catch{}
+});
+</script>
+</body>
+</html>
