@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4컷 이미지 만들기 프롬프트 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#F2F8FF;--white:#fff;--ink:#2C2C3A;--ink-soft:#5A5A72;--border:#D8E4F2;
+  --purple:#7B6CF6;--purple-light:#EDE9FF;--purple-dark:#3C3489;
+  --teal:#38C9A0;--teal-light:#D9F7EE;--teal-dark:#0a6b50;
+  --coral:#FF7B6B;--coral-light:#FFECE9;--coral-dark:#C4402E;
+  --amber:#F9A825;--amber-light:#FFF3D0;--amber-dark:#854F0B;
+  --r:14px;--r-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--sky);color:var(--ink);min-height:100vh;padding-bottom:60px}
+textarea,input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--ink);line-height:1.7}
+textarea{resize:none}
+textarea:focus,input[type=text]:focus{outline:none;border-color:var(--purple)}
+textarea::placeholder,input::placeholder{color:#AABBD0}
+.btn-purple{background:var(--purple);color:white;width:100%;padding:13px;font-size:14px;font-weight:700;border:none;border-radius:var(--r-sm);cursor:pointer;font-family:'Noto Sans KR',sans-serif}.btn-purple:hover{background:#6458e0}
+.btn-teal{background:var(--teal);color:white;width:100%;padding:11px;font-size:13px;font-weight:700;border:none;border-radius:var(--r-sm);cursor:pointer;font-family:'Noto Sans KR',sans-serif}.btn-teal:hover{background:#28b08b}
+.btn-ai{background:var(--purple-light);border:1.5px solid var(--purple);color:var(--purple-dark);font-size:12px;padding:7px 16px;border-radius:99px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}.btn-ai:hover{background:var(--purple);color:white}
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:14px}
+.section-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.section-sub{font-size:12px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6}
+.lbl{font-size:12px;font-weight:500;color:var(--ink-soft);margin:10px 0 5px}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--purple);color:white;font-size:11px;font-weight:700;flex-shrink:0}
+.step-badge.t{background:var(--teal)}
+.step-badge.a{background:var(--amber)}
+.tip-box{background:var(--amber-light);border-left:3px solid var(--amber);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--amber-dark);line-height:1.6;margin-bottom:14px}
+.info-box{background:var(--teal-light);border-left:3px solid var(--teal);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--teal-dark);line-height:1.6;margin-bottom:12px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--ink)}
+select:focus{outline:none;border-color:var(--purple)}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag{padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--white);font-size:11px;cursor:pointer;color:var(--ink-soft);font-family:'Noto Sans KR',sans-serif}
+.tag.on{border-color:var(--purple);background:var(--purple-light);color:var(--purple-dark);font-weight:500}
+.char-card{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px;background:var(--sky);margin-bottom:8px;position:relative}
+.prompt-wrap{position:relative;margin-top:8px}
+.prompt-box{border-radius:var(--r-sm);padding:12px 40px 12px 14px;font-size:12px;line-height:1.75;white-space:pre-wrap;min-height:44px;word-break:break-all;display:none}
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer;display:none}
+.copy-btn:hover{background:var(--white);color:var(--purple)}
+.tools-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px;display:none}
+.tool-btn{padding:8px 4px;border-radius:var(--r-sm);border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;line-height:1.5;background:var(--white)}
+.t-gpt{border-color:#19C37D;color:#0a6b3a}.t-gpt:hover{background:#19C37D;color:white}
+.t-gem{border-color:#4285F4;color:#1a56c4}.t-gem:hover{background:#4285F4;color:white}
+.t-cv{border-color:#7B61FF;color:#4B3ACC}.t-cv:hover{background:#7B61FF;color:white}
+.t-grk{border-color:#1a1a1a;color:#1a1a1a}.t-grk:hover{background:#1a1a1a;color:white}
+.cut-card{border-radius:var(--r);padding:16px;margin-bottom:12px}
+.msg-box{display:none;font-size:12px;margin-top:8px;padding:8px 12px;border-radius:var(--r-sm)}
+</style>
+</head>
+<body>
+
+<header style="background:var(--white);border-bottom:1.5px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;">
+  <div style="width:38px;height:38px;background:var(--purple-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">🎨</div>
+  <div>
+    <div style="font-family:'Gaegu',cursive;font-size:20px;color:var(--purple);font-weight:700;line-height:1;">4컷 이미지 만들기 프롬프트 만들기</div>
+    <div style="font-size:11px;color:var(--ink-soft);">© 쑥선생</div>
+  </div>
+</header>
+
+<main style="max-width:720px;margin:0 auto;padding:20px;">
+
+  <div style="background:var(--purple-light);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;">
+    <p style="font-size:14px;font-weight:500;color:var(--purple-dark);margin-bottom:4px;">🖼️ 이야기 → 등장인물 확정 → 컷별 이미지!</p>
+    <p style="font-size:12px;color:var(--purple);line-height:1.7;">① 줄거리 입력 → ② 그림체 설정 → ③ 등장인물 정리 → ④ 캐릭터 통합 프롬프트 생성 → ⑤ 컷별 장면 이미지 생성</p>
+  </div>
+
+  <!-- STEP 1: 줄거리 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge">1</span> 이야기 줄거리 입력</div>
+    <div class="section-sub">ChatGPT가 만들어준 4컷 이야기를 붙여넣어요!</div>
+
+    <div class="lbl">📋 전체 이야기 붙여넣기</div>
+    <textarea id="storyPaste" rows="9" placeholder="[1컷] 기 — 시작 겁쟁이 소년 지호는 엄마, 아빠와 함께 깊은 숲속 오두막에 살고 있었어요.
+[2컷] 승 — 사건 숲속에서 길을 잃은 척하는 수상한 할머니를 만났어요.
+[3컷] 전 — 해결 시도 지호는 순간 겁이 났지만, 엄마가 준 약물을 떠올렸어요.
+[4컷] 결 — 결말 마녀는 괴로워하며 사라지고, 지호는 무사히 집으로 돌아왔어요."></textarea>
+    <button class="btn-teal" onclick="parseStory()" style="margin-top:10px;">✂️ 자동으로 각 컷에 나누기</button>
+    <div id="parseMsg" class="msg-box"></div>
+
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">나눠진 내용을 확인하고 수정할 수 있어요 ✏️</div>
+
+    <div class="lbl">🌅 1컷 — 기 (시작)</div>
+    <textarea id="sc1" rows="2" placeholder="자동으로 채워지거나 직접 써봐요!"></textarea>
+    <div class="lbl">⚡ 2컷 — 승 (사건)</div>
+    <textarea id="sc2" rows="2" placeholder="자동으로 채워지거나 직접 써봐요!"></textarea>
+    <div class="lbl">🔥 3컷 — 전 (해결 시도)</div>
+    <textarea id="sc3" rows="2" placeholder="자동으로 채워지거나 직접 써봐요!"></textarea>
+    <div class="lbl">🌈 4컷 — 결 (결말)</div>
+    <textarea id="sc4" rows="2" placeholder="자동으로 채워지거나 직접 써봐요!"></textarea>
+
+    <div class="divider"></div>
+    <div class="lbl">🗺️ 배경 / 장소 (선택)</div>
+    <textarea id="setting" rows="2" placeholder="예) 깊은 숲속 오두막, 밤, 신비롭고 어두운 분위기"></textarea>
+  </div>
+
+  <!-- STEP 2: 그림체 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge">2</span> 그림체 설정</div>
+    <div class="section-sub">모든 컷에 동일하게 적용돼요! 먼저 정해두면 캐릭터 프롬프트에 바로 반영돼요.</div>
+    <select id="artStyle">
+      <option value="Studio Ghibli style, soft watercolor, warm colors">🌿 지브리 스타일 (따뜻한 수채화)</option>
+      <option value="children's book illustration, flat design, bright colors">📚 동화책 일러스트 (플랫 디자인)</option>
+      <option value="cute anime style, pastel colors, sparkles">✨ 귀여운 애니 스타일 (파스텔)</option>
+      <option value="Disney Pixar 3D style, vibrant colors, expressive">🎬 디즈니 픽사 3D</option>
+      <option value="comic book style, bold outlines, dynamic poses">💥 만화책 스타일 (굵은 선)</option>
+      <option value="soft watercolor illustration, dreamy atmosphere">🎨 수채화 (몽환적)</option>
+      <option value="Korean webtoon style, clean sharp lines, vivid colors, dynamic composition">🇰🇷 한국 웹툰 스타일</option>
+      <option value="retro pixel art, 8-bit game style, bright limited colors, chunky pixels">🕹️ 게임 픽셀 아트 (8비트)</option>
+      <option value="sci-fi robot anime style, mechanical details, action poses, dramatic lighting">🤖 로봇/SF 애니메이션</option>
+      <option value="Disney princess animation style, elegant, beautiful characters, magical atmosphere, rich colors">👑 디즈니 공주 스타일</option>
+      <option value="Japanese anime style, large expressive eyes, detailed hair, soft shading, colorful">🌸 일본 애니메이션 스타일</option>
+      <option value="watercolor illustration, soft brush strokes, delicate colors, artistic texture">🖌️ 수채화 일러스트</option>
+      <option value="picture book illustration style, hand-drawn, warm textures, cozy and gentle">📖 그림책 삽화 스타일</option>
+    </select>
+    <div style="font-size:12px;color:var(--ink-soft);margin:10px 0 4px;">색감 톤</div>
+    <div class="tag-row">
+      <div class="tag on" onclick="pickTag(this)">밝고 따뜻한</div>
+      <div class="tag" onclick="pickTag(this)">어둡고 신비로운</div>
+      <div class="tag" onclick="pickTag(this)">차갑고 서늘한</div>
+      <div class="tag" onclick="pickTag(this)">파스텔 톤</div>
+      <div class="tag" onclick="pickTag(this)">선명하고 강렬한</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 등장인물 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge">3</span> 등장인물 정리</div>
+    <div class="section-sub">AI로 전체 등장인물을 한 번에 분석해요. 결과를 아래 칸에 붙여넣으면 돼요!</div>
+
+    <button class="btn-teal" onclick="analyzeChars()" style="margin-bottom:10px;">🔍 전체 등장인물 한 번에 분석하기</button>
+    <div id="analyzeMsg" class="msg-box" style="background:var(--teal-light);color:var(--teal-dark);margin-bottom:10px;">
+      💬 ChatGPT가 열렸어요! 분석 결과 전체를 복사해서 아래 칸에 붙여넣어봐요.
+    </div>
+
+    <div class="lbl">📋 등장인물 분석 결과 붙여넣기</div>
+    <textarea id="charAll" rows="8" placeholder="ChatGPT 분석 결과를 여기에 전부 붙여넣어요!
+예)
+[인물1]
+이름: 지호
+외모: 짧은 검은 머리, 노란 티셔츠, 10살 소년
+특징: 겁쟁이지만 용감해짐
+
+[인물2]
+이름: 마녀 할머니
+외모: 검은 뾰족한 모자, 어두운 보라 망토
+특징: 길을 잃은 척 위장하는 악당"></textarea>
+  </div>
+
+  <!-- STEP 4: 캐릭터 통합 프롬프트 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge a">4</span> 캐릭터 통합 프롬프트 먼저 생성!</div>
+    <div class="section-sub">전체 등장인물을 한 번에 확정해요. 이 이미지를 기준으로 컷별 장면을 만들어요!</div>
+
+    <div class="tip-box">
+      💡 <strong>왜 먼저 만드나요?</strong><br>
+      캐릭터를 먼저 한 장으로 확정해두면 이후 각 컷에서 "이 캐릭터 그대로 장면만 바꿔줘" 라고 요청할 수 있어요. 통일성이 훨씬 좋아져요!
+    </div>
+
+    <button class="btn-purple" onclick="genCharAll()">✨ 캐릭터 통합 프롬프트 만들기</button>
+
+    <div class="prompt-wrap" style="margin-top:12px;">
+      <div class="prompt-box" id="charAllPrompt" style="background:var(--purple-light);color:var(--purple-dark);"></div>
+      <button class="copy-btn" id="charAllCopy" onclick="copyP('charAllPrompt','charAllCopy')">📋</button>
+    </div>
+    <div class="tools-grid" id="charAllTools">
+      <button class="tool-btn t-gpt" onclick="openTool('gpt','charAllPrompt')">💬<br>ChatGPT</button>
+      <button class="tool-btn t-gem" onclick="openTool('gem','charAllPrompt')">🔷<br>Gemini</button>
+      <button class="tool-btn t-cv" onclick="openTool('cv','charAllPrompt')">🎨<br>캔바 AI</button>
+      <button class="tool-btn t-grk" onclick="openTool('grk','charAllPrompt')">⚡<br>Grok</button>
+    </div>
+
+    <div id="charAllDone" style="display:none;margin-top:10px;background:var(--teal-light);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--teal-dark);line-height:1.6;">
+      ✅ 캐릭터 이미지를 만들었나요? 이제 아래 5단계에서 각 컷별 장면을 만들어봐요!<br>
+      같은 채팅창에서 "이 캐릭터 그대로 장면만 바꿔줘" 라고 요청하면 통일성이 유지돼요!
+    </div>
+  </div>
+
+  <!-- STEP 5: 컷별 장면 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge t">5</span> 컷별 장면 프롬프트 생성</div>
+    <div class="section-sub">4단계에서 확정한 캐릭터 기반으로 각 컷 장면을 만들어요!</div>
+
+    <div class="info-box">
+      💡 2컷부터는 <strong>"앞 장면과 캐릭터 외모 동일하게 유지"</strong> 조건이 자동으로 들어가요!<br>
+      같은 도구의 같은 채팅창에서 계속 요청하면 캐릭터가 통일돼요.
+    </div>
+
+    <button class="btn-purple" onclick="genAll()" style="margin-bottom:16px;">✨ 4컷 전체 프롬프트 한 번에 만들기</button>
+
+    <!-- 1컷 -->
+    <div class="cut-card" style="background:#EDE9FF;">
+      <div style="font-size:13px;font-weight:700;color:#5840D8;margin-bottom:10px;">🌅 1컷 — 기 (시작)</div>
+      <button class="btn-ai" onclick="genScene(1)">✨ 장면 프롬프트 만들기</button>
+      <div class="prompt-wrap">
+        <div class="prompt-box" id="p1" style="background:white;color:#3C3489;"></div>
+        <button class="copy-btn" id="copy1" onclick="copyP('p1','copy1')">📋</button>
+      </div>
+      <div class="tools-grid" id="t1">
+        <button class="tool-btn t-gpt" onclick="openTool('gpt','p1')">💬<br>ChatGPT</button>
+        <button class="tool-btn t-gem" onclick="openTool('gem','p1')">🔷<br>Gemini</button>
+        <button class="tool-btn t-cv" onclick="openTool('cv','p1')">🎨<br>캔바 AI</button>
+        <button class="tool-btn t-grk" onclick="openTool('grk','p1')">⚡<br>Grok</button>
+      </div>
+    </div>
+
+    <!-- 2컷 -->
+    <div class="cut-card" style="background:#FFECE9;">
+      <div style="font-size:13px;font-weight:700;color:#C4402E;margin-bottom:10px;">⚡ 2컷 — 승 (사건)</div>
+      <button class="btn-ai" onclick="genScene(2)">✨ 장면 프롬프트 만들기</button>
+      <div class="prompt-wrap">
+        <div class="prompt-box" id="p2" style="background:white;color:#7a1a0a;"></div>
+        <button class="copy-btn" id="copy2" onclick="copyP('p2','copy2')">📋</button>
+      </div>
+      <div class="tools-grid" id="t2">
+        <button class="tool-btn t-gpt" onclick="openTool('gpt','p2')">💬<br>ChatGPT</button>
+        <button class="tool-btn t-gem" onclick="openTool('gem','p2')">🔷<br>Gemini</button>
+        <button class="tool-btn t-cv" onclick="openTool('cv','p2')">🎨<br>캔바 AI</button>
+        <button class="tool-btn t-grk" onclick="openTool('grk','p2')">⚡<br>Grok</button>
+      </div>
+    </div>
+
+    <!-- 3컷 -->
+    <div class="cut-card" style="background:#FFF3D0;">
+      <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:10px;">🔥 3컷 — 전 (해결 시도)</div>
+      <button class="btn-ai" onclick="genScene(3)">✨ 장면 프롬프트 만들기</button>
+      <div class="prompt-wrap">
+        <div class="prompt-box" id="p3" style="background:white;color:#4a2a00;"></div>
+        <button class="copy-btn" id="copy3" onclick="copyP('p3','copy3')">📋</button>
+      </div>
+      <div class="tools-grid" id="t3">
+        <button class="tool-btn t-gpt" onclick="openTool('gpt','p3')">💬<br>ChatGPT</button>
+        <button class="tool-btn t-gem" onclick="openTool('gem','p3')">🔷<br>Gemini</button>
+        <button class="tool-btn t-cv" onclick="openTool('cv','p3')">🎨<br>캔바 AI</button>
+        <button class="tool-btn t-grk" onclick="openTool('grk','p3')">⚡<br>Grok</button>
+      </div>
+    </div>
+
+    <!-- 4컷 -->
+    <div class="cut-card" style="background:#D9F7EE;">
+      <div style="font-size:13px;font-weight:700;color:#0a6b50;margin-bottom:10px;">🌈 4컷 — 결 (결말)</div>
+      <button class="btn-ai" onclick="genScene(4)">✨ 장면 프롬프트 만들기</button>
+      <div class="prompt-wrap">
+        <div class="prompt-box" id="p4" style="background:white;color:#064030;"></div>
+        <button class="copy-btn" id="copy4" onclick="copyP('p4','copy4')">📋</button>
+      </div>
+      <div class="tools-grid" id="t4">
+        <button class="tool-btn t-gpt" onclick="openTool('gpt','p4')">💬<br>ChatGPT</button>
+        <button class="tool-btn t-gem" onclick="openTool('gem','p4')">🔷<br>Gemini</button>
+        <button class="tool-btn t-cv" onclick="openTool('cv','p4')">🎨<br>캔바 AI</button>
+        <button class="tool-btn t-grk" onclick="openTool('grk','p4')">⚡<br>Grok</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 도구별 팁 -->
+  <div class="card">
+    <div class="section-title"><span class="step-badge" style="background:var(--coral);">💡</span> 도구별 캐릭터 통일성 팁</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;font-size:12px;line-height:1.6;">
+      <div style="background:#E8FBF4;border-radius:var(--r-sm);padding:10px 14px;color:#0a6b3a;"><strong>💬 ChatGPT</strong> — 4단계에서 캐릭터 이미지 만든 같은 채팅창에서 계속! "이 캐릭터 그대로 장면만 바꿔줘" 요청</div>
+      <div style="background:#EAF2FF;border-radius:var(--r-sm);padding:10px 14px;color:#1a56c4;"><strong>🔷 Gemini</strong> — 같은 대화에서 이어서. "위 캐릭터와 동일한 외모로" 명시</div>
+      <div style="background:#F0EEFF;border-radius:var(--r-sm);padding:10px 14px;color:#4B3ACC;"><strong>🎨 캔바 AI</strong> — "유사 이미지 만들기" 기능 활용</div>
+      <div style="background:#F5F5F5;border-radius:var(--r-sm);padding:10px 14px;color:#1a1a1a;"><strong>⚡ Grok</strong> — X 계정 필요. 같은 대화에서 이어서 요청</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ===== 한글→영문 변환 =====
+const KOR = {
+  '짧은':'short','긴':'long','검은':'black','흰':'white','갈색':'brown','금발':'blonde','빨간':'red','파란':'blue','노란':'yellow','초록':'green','보라':'purple','주황':'orange','핑크':'pink','회색':'gray',
+  '머리카락':'hair','머리':'hair','눈':'eyes','얼굴':'face','몸':'body',
+  '소녀':'girl','소년':'boy','여자아이':'girl','남자아이':'boy','아이':'child','어린이':'child','할머니':'grandmother','할아버지':'grandfather','마녀':'witch','마법사':'wizard',
+  '스웨터':'sweater','티셔츠':'t-shirt','원피스':'dress','바지':'pants','청바지':'jeans','치마':'skirt','코트':'coat','망토':'cloak','앞치마':'apron','교복':'school uniform',
+  '머리핀':'hairpin','안경':'glasses','모자':'hat','뾰족한':'pointed','묶음':'bun','곱슬':'curly','단발':'bob cut',
+  '크고':'big','작고':'small','둥근':'round','날카로운':'sharp','친절한':'kind','귀여운':'cute','용감한':'brave','신비로운':'mysterious','어두운':'dark','밝은':'bright','따뜻한':'warm','빛나는':'glowing','주름진':'wrinkled','겁쟁이':'cowardly boy',
+  '숲속':'deep forest','숲':'forest','바다':'sea','마을':'village','도시':'city','등대':'lighthouse','학교':'school','밤':'night','낮':'daytime','오두막':'cabin','항구':'harbor','산':'mountain','강':'river','동굴':'cave','성':'castle',
+};
+
+function toEng(text) {
+  if (!text) return '';
+  let r = text;
+  Object.entries(KOR).forEach(function(kv) { r = r.replace(new RegExp(kv[0], 'g'), kv[1]); });
+  return r;
+}
+
+function gv(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function getStyle() {
+  var sel = document.getElementById('artStyle');
+  var style = sel ? sel.value : "children's book illustration";
+  var tag = document.querySelector('.tag.on');
+  var colorMap = {'밝고 따뜻한':'warm bright colors','어둡고 신비로운':'dark mysterious atmosphere','차갑고 서늘한':'cool cold tones','파스텔 톤':'soft pastel colors','선명하고 강렬한':'vivid vibrant colors'};
+  var color = tag ? (colorMap[tag.textContent] || 'warm bright colors') : 'warm bright colors';
+  return style + ', ' + color + ', high quality, no text';
+}
+
+function pickTag(el) {
+  document.querySelectorAll('.tag').forEach(function(t) { t.classList.remove('on'); });
+  el.classList.add('on');
+}
+
+// ===== STEP 1: 파싱 =====
+function parseStory() {
+  var text = document.getElementById('storyPaste').value.trim();
+  var msg = document.getElementById('parseMsg');
+
+  if (!text) {
+    msg.style.display = 'block';
+    msg.style.background = '#FFECE9';
+    msg.style.color = 'var(--coral-dark)';
+    msg.textContent = '⚠️ 먼저 이야기를 붙여넣어주세요!';
+    return;
+  }
+
+  function extract(n) {
+    var nextPat = n < 4 ? ('\\[' + (n+1) + '컷\\]') : '~~~NEVER~~~';
+    var re = new RegExp('\\[' + n + '컷\\]([\\s\\S]*?)(?=' + nextPat + '|$)', 'i');
+    var m = text.match(re);
+    if (!m) return '';
+    var raw = m[1].trim();
+    raw = raw.replace(/^[\s]*(?:기|승|전|결)\s*[—\-–]\s*/i, '').trim();
+    return raw;
+  }
+
+  var cuts = [extract(1), extract(2), extract(3), extract(4)];
+
+  if (!cuts.some(function(c) { return c; })) {
+    msg.style.display = 'block';
+    msg.style.background = '#FFECE9';
+    msg.style.color = 'var(--coral-dark)';
+    msg.textContent = '⚠️ [1컷] [2컷] [3컷] [4컷] 형식을 찾지 못했어요!';
+    return;
+  }
+
+  ['sc1','sc2','sc3','sc4'].forEach(function(id, i) {
+    if (cuts[i]) document.getElementById(id).value = cuts[i];
+  });
+
+  var placeKw = ['숲속','숲','마을','바다','학교','산','동굴','성','오두막','항구','도시','하늘','우주','강'];
+  var found = placeKw.find(function(k) { return text.includes(k); });
+  var settingEl = document.getElementById('setting');
+  if (found && settingEl && !settingEl.value) settingEl.value = found + ' 배경';
+
+  msg.style.display = 'block';
+  msg.style.background = '#D9F7EE';
+  msg.style.color = 'var(--teal-dark)';
+  msg.textContent = '✅ 4컷이 자동으로 나눠졌어요! 확인하고 수정해봐요.';
+}
+
+// ===== STEP 2: 등장인물 =====
+function getCharDesc() {
+  return toEng(gv('charAll'));
+}
+
+function analyzeChars() {
+  var story = gv('storyPaste') || [gv('sc1'),gv('sc2'),gv('sc3'),gv('sc4')].filter(Boolean).join('\n');
+  if (!story) { alert('먼저 이야기를 입력해주세요!'); return; }
+  var prompt = '아래 이야기에 나오는 등장인물을 전부 한 번에 분석해줘.\n각 인물마다 이름, 외모(머리·눈·옷·체형), 특징을 간단히 정리해줘.\n\n이야기:\n' + story + '\n\n형식:\n[인물1]\n이름: \n외모: \n특징: \n\n[인물2]\n이름: \n외모: \n특징: ';
+  var msg = document.getElementById('analyzeMsg');
+  msg.style.display = 'block';
+  window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
+}
+
+// ===== STEP 4: 캐릭터 통합 프롬프트 =====
+var promptStore = {};
+
+function genCharAll() {
+  var chars = getCharDesc();
+  var style = getStyle();
+  var setting = toEng(gv('setting'));
+
+  var text =
+    "Children's book character reference sheet:\n" +
+    "Show ALL characters together in one illustration:\n" +
+    (chars ? chars + "\n" : "main characters\n") +
+    (setting ? "Setting hint: " + setting + "\n" : '') +
+    "Style: " + style + "\n" +
+    "Full body, white or simple background, each character clearly visible, expressive faces\n" +
+    "This is a CHARACTER DESIGN SHEET — use this as reference for all subsequent scenes";
+
+  promptStore['charAllPrompt'] = text;
+  var box = document.getElementById('charAllPrompt');
+  box.textContent = text;
+  box.style.display = 'block';
+  document.getElementById('charAllCopy').style.display = 'block';
+  document.getElementById('charAllTools').style.display = 'grid';
+  document.getElementById('charAllDone').style.display = 'block';
+}
+
+// ===== STEP 5: 컷별 장면 =====
+function genScene(n) {
+  var scene = toEng(gv('sc' + n)) || 'scene ' + n;
+  var setting = toEng(gv('setting'));
+  var chars = getCharDesc();
+  var style = getStyle();
+  var consistency = n > 1
+    ? '\nCONSISTENCY REQUIRED: Use EXACT same character designs as the reference sheet from scene 1. Same face, hair, outfit for every character. Only poses and expressions change.'
+    : '\n(This is scene 1 — establish the character designs clearly)';
+
+  var text =
+    "Children's book illustration, scene " + n + ":\n" +
+    "Scene: " + scene + "\n" +
+    (setting ? "Setting: " + setting + "\n" : '') +
+    (chars ? "Characters: " + chars + "\n" : '') +
+    "Style: " + style + "\n" +
+    "Full scene with characters and detailed background, expressive poses matching the mood" +
+    consistency;
+
+  promptStore['p' + n] = text;
+  var box = document.getElementById('p' + n);
+  box.textContent = text;
+  box.style.display = 'block';
+  document.getElementById('copy' + n).style.display = 'block';
+  document.getElementById('t' + n).style.display = 'grid';
+}
+
+function genAll() {
+  [1,2,3,4].forEach(function(n) { genScene(n); });
+}
+
+// ===== 복사 & 도구 열기 =====
+function copyP(elId, btnId) {
+  var text = promptStore[elId] || document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById(btnId);
+    var orig = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(function() { btn.textContent = orig; }, 1500);
+  });
+}
+
+function openTool(tool, elId) {
+  var p = promptStore[elId] || document.getElementById(elId).textContent;
+  var urls = {
+    gpt: 'https://chatgpt.com/?q=' + encodeURIComponent('아래 프롬프트로 이미지를 만들어줘 (텍스트 말고 이미지로!):\n\n' + p),
+    gem: 'https://gemini.google.com/',
+    cv: 'https://www.canva.com/ai-image-generator/',
+    grk: 'https://x.com/i/grok',
+  };
+  if (needsCopy.indexOf(tool) >= 0) {
+    navigator.clipboard.writeText(p).then(function() {
+      window.open(urls[tool], '_blank');
+      setTimeout(function() { alert('프롬프트가 복사됐어요!\n' + names[tool] + ' 창에 붙여넣어봐요 😊'); }, 400);
+    });
+  } else {
+    window.open(urls[tool], '_blank');
+  }
+}
+
+// ===== 초기화 =====
+window.addEventListener('load', function() {
+  try {
+    var raw = localStorage.getItem('prompt_maker_import');
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    ['sc1','sc2','sc3','sc4','setting'].forEach(function(k) {
+      if (data[k]) { var el = document.getElementById(k); if (el) el.value = data[k]; }
+    });
+    if (data.sc1 || data.sc2 || data.sc3 || data.sc4) {
+      var paste = [
+        data.sc1 ? '[1컷] ' + data.sc1 : '',
+        data.sc2 ? '[2컷] ' + data.sc2 : '',
+        data.sc3 ? '[3컷] ' + data.sc3 : '',
+        data.sc4 ? '[4컷] ' + data.sc4 : ''
+      ].filter(Boolean).join('\n');
+      document.getElementById('storyPaste').value = paste;
+    }
+    localStorage.removeItem('prompt_maker_import');
+  } catch(e) {}
+});
+</script>
+</body>
+</html>
