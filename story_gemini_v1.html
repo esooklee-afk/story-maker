@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 이야기 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#F2F8FF;--white:#fff;--ink:#2C2C3A;--ink-soft:#5A5A72;--border:#D8E4F2;
+  --blue:#4285F4;--blue-light:#EAF2FF;--blue-dark:#1a56c4;
+  --teal:#38C9A0;--teal-light:#D9F7EE;--teal-dark:#0a6b50;
+  --purple:#7B6CF6;--purple-light:#EDE9FF;--purple-dark:#3C3489;
+  --coral:#FF7B6B;--coral-light:#FFECE9;--coral-dark:#C4402E;
+  --amber:#F9A825;--amber-light:#FFF3D0;--amber-dark:#854F0B;
+  --r:16px;--r-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--sky);color:var(--ink);min-height:100vh;padding-bottom:60px}
+
+/* 헤더 */
+header{background:var(--white);border-bottom:1.5px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.header-icon{width:40px;height:40px;background:var(--blue-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+
+/* 저장바 */
+.save-bar{max-width:680px;margin:12px auto 0;padding:0 20px;display:flex;gap:8px;align-items:center;}
+.save-bar input{width:120px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:12px;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--ink);}
+
+/* 탭 */
+.tabs{display:flex;max-width:680px;margin:16px auto 0;padding:0 20px;gap:8px;}
+.tab{flex:1;padding:11px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;transition:all 0.2s;color:var(--ink-soft);}
+.tab.active{background:var(--blue);border-color:var(--blue);color:white;}
+
+main{max-width:680px;margin:20px auto;padding:0 20px;}
+
+/* 공통 */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;}
+.btn{padding:11px 18px;border-radius:var(--r-sm);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;width:100%;}
+.btn-blue{background:var(--blue);color:white}.btn-blue:hover{background:#2a75e8}
+.btn-teal{background:var(--teal);color:white}.btn-teal:hover{background:#28b08b}
+.btn-outline{background:var(--white);border:1.5px solid var(--border)!important;color:var(--ink-soft)}.btn-outline:hover{background:var(--sky)}
+.btn-gemini{background:linear-gradient(135deg,#4285F4,#34A853);color:white}.btn-gemini:hover{opacity:0.9}
+
+/* 채팅 */
+.chat-area{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;min-height:200px;}
+.bubble{padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.7;max-width:88%;}
+.bubble-ai{background:var(--blue-light);color:var(--blue-dark);border-bottom-left-radius:4px;align-self:flex-start;}
+.bubble-ai .ai-name{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:4px;}
+.bubble-user{background:var(--purple-light);color:var(--purple-dark);border-bottom-right-radius:4px;align-self:flex-end;}
+.input-row{display:flex;gap:8px;}
+.input-row textarea{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;resize:none;background:var(--white);color:var(--ink);min-height:52px;}
+.input-row textarea:focus{outline:none;border-color:var(--blue);}
+.send-btn{padding:10px 18px;border-radius:var(--r-sm);border:none;background:var(--blue);color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+.send-btn:hover{background:#2a75e8}
+
+/* 스텝 표시 */
+.step-row{display:flex;gap:6px;margin-bottom:16px;}
+.step-dot{width:10px;height:10px;border-radius:50%;background:var(--border);}
+.step-dot.done{background:var(--teal);}
+.step-dot.active{background:var(--blue);}
+
+/* 스토리보드 */
+.board-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.cut-card{border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);}
+.cut-head{padding:8px 12px;font-size:11px;font-weight:700;}
+.s1{background:#EDE9FF;color:#5840D8;}
+.s2{background:#FFECE9;color:#C4402E;}
+.s3{background:#FFF3D0;color:#854F0B;}
+.s4{background:#D9F7EE;color:#0a6b50;}
+.cut-body{padding:10px;}
+.cut-text{font-size:12px;line-height:1.7;color:var(--ink);min-height:60px;white-space:pre-wrap;margin-bottom:8px;}
+.img-upload{border:1.5px dashed var(--border);border-radius:var(--r-sm);height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--sky);overflow:hidden;position:relative;transition:border-color 0.2s;}
+.img-upload:hover{border-color:var(--blue);}
+.img-upload img{width:100%;height:100%;object-fit:cover;position:absolute;}
+.img-remove{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;z-index:2;}
+
+/* 완성 화면 */
+.final-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.final-head{background:linear-gradient(135deg,var(--blue-light),var(--teal-light));padding:16px 20px;}
+.final-scene{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;gap:12px;}
+.final-scene:last-child{border-bottom:none;}
+.final-scene img{width:100px;height:75px;object-fit:cover;border-radius:8px;flex-shrink:0;}
+.final-label{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block;margin-bottom:6px;}
+
+/* 버튼들 */
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+.btn-half{flex:1;padding:10px;border-radius:var(--r-sm);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+.lbl{font-size:12px;font-weight:500;color:var(--ink-soft);margin:8px 0 4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">📖</div>
+  <div>
+    <div style="font-family:'Gaegu',cursive;font-size:20px;color:var(--blue);font-weight:700;line-height:1;">AI 이야기 만들기</div>
+    <div style="font-size:11px;color:var(--ink-soft);">© 쑥선생 · Powered by Gemini</div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+    <input type="text" id="userName" placeholder="✏️ 이름" maxlength="10" style="width:90px;padding:6px 10px;border-radius:99px;border:1.5px solid var(--border);font-size:12px;font-family:'Noto Sans KR',sans-serif;">
+    <button onclick="saveData()" style="padding:6px 12px;border-radius:99px;border:1.5px solid var(--teal);background:var(--teal-light);color:var(--teal-dark);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">💾 저장</button>
+    <span id="saveMsg" style="display:none;font-size:11px;color:var(--teal);">✅</span>
+  </div>
+</header>
+
+<!-- 탭 -->
+<div class="tabs">
+  <button class="tab active" id="tab1" onclick="showTab(1)">✍️ 이야기 만들기</button>
+  <button class="tab" id="tab2" onclick="showTab(2)">🎬 스토리보드</button>
+  <button class="tab" id="tab3" onclick="showTab(3)">✨ 완성!</button>
+</div>
+
+<main>
+
+  <!-- TAB 1: 이야기 만들기 -->
+  <div id="page1">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:28px;height:28px;background:var(--blue-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🔷</div>
+        <div style="font-size:14px;font-weight:700;color:var(--blue-dark);">Gemini와 함께 이야기 만들기</div>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6;">Gemini가 질문하면 답해봐요! 답변을 바탕으로 이야기를 함께 만들어요.</p>
+
+      <!-- 스텝 표시 -->
+      <div class="step-row" id="stepDots">
+        <div class="step-dot active" id="dot0"></div>
+        <div class="step-dot" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+        <div class="step-dot" id="dot4"></div>
+        <div class="step-dot" id="dot5"></div>
+      </div>
+
+      <!-- 채팅 영역 -->
+      <div class="chat-area" id="chatArea"></div>
+
+      <!-- 입력 -->
+      <div class="input-row" id="inputRow">
+        <textarea id="userInput" rows="2" placeholder="여기에 답해봐요!"></textarea>
+        <button class="send-btn" onclick="sendAnswer()">보내기 →</button>
+      </div>
+      <div id="nextBtns" style="display:none;margin-top:10px;">
+        <button class="btn btn-gemini" onclick="makeStory()">🔷 Gemini로 4컷 이야기 만들기!</button>
+      </div>
+    </div>
+
+    <!-- 만들어진 이야기 미리보기 -->
+    <div class="card" id="storyPreview" style="display:none;">
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">📖 완성된 이야기</div>
+      <div style="font-size:13px;line-height:1.75;color:var(--ink);white-space:pre-wrap;" id="storyText"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;">
+        <button class="btn-half btn-teal" onclick="showTab(2)">스토리보드 만들기 →</button>
+        <button class="btn-half btn-outline" style="border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft);cursor:pointer;" onclick="resetChat()">↺ 다시 만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: 스토리보드 -->
+  <div id="page2" style="display:none;">
+    <div class="card" style="padding:14px 18px;background:var(--blue-light);border-color:#C8DEFF;">
+      <p style="font-size:13px;color:var(--blue-dark);line-height:1.6;">🎬 각 컷에 내용을 확인하고 이미지를 올려봐요!<br>이미지는 Gemini에서 만들어 다운로드한 뒤 올리면 돼요.</p>
+    </div>
+
+    <div class="board-grid">
+      <!-- 1컷 -->
+      <div class="cut-card">
+        <div class="cut-head s1">🌅 1컷 — 기 (시작)</div>
+        <div class="cut-body">
+          <div class="cut-text" id="cut1text">이야기를 먼저 만들어봐요!</div>
+          <div class="img-upload" id="imgArea1" onclick="triggerUpload('img1')">
+            <input type="file" id="img1" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea1')">
+            <span style="font-size:11px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+          </div>
+        </div>
+      </div>
+      <!-- 2컷 -->
+      <div class="cut-card">
+        <div class="cut-head s2">⚡ 2컷 — 승 (사건)</div>
+        <div class="cut-body">
+          <div class="cut-text" id="cut2text">이야기를 먼저 만들어봐요!</div>
+          <div class="img-upload" id="imgArea2" onclick="triggerUpload('img2')">
+            <input type="file" id="img2" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea2')">
+            <span style="font-size:11px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+          </div>
+        </div>
+      </div>
+      <!-- 3컷 -->
+      <div class="cut-card">
+        <div class="cut-head s3">🔥 3컷 — 전 (해결)</div>
+        <div class="cut-body">
+          <div class="cut-text" id="cut3text">이야기를 먼저 만들어봐요!</div>
+          <div class="img-upload" id="imgArea3" onclick="triggerUpload('img3')">
+            <input type="file" id="img3" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea3')">
+            <span style="font-size:11px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+          </div>
+        </div>
+      </div>
+      <!-- 4컷 -->
+      <div class="cut-card">
+        <div class="cut-head s4">🌈 4컷 — 결 (결말)</div>
+        <div class="cut-body">
+          <div class="cut-text" id="cut4text">이야기를 먼저 만들어봐요!</div>
+          <div class="img-upload" id="imgArea4" onclick="triggerUpload('img4')">
+            <input type="file" id="img4" accept="image/*" style="display:none" onchange="previewImg(this,'imgArea4')">
+            <span style="font-size:11px;color:#AABBD0;">🖼️ 이미지 올리기</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:8px;">🔷 Gemini로 이미지 만들기</div>
+      <div style="background:var(--amber-light);border-left:3px solid var(--amber);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--amber-dark);line-height:1.7;margin-bottom:10px;">
+        💡 <strong>캐릭터를 똑같이 유지하는 방법!</strong><br>
+        ① 1컷 프롬프트 복사 → Gemini 창 열기 → 붙여넣어 이미지 생성<br>
+        ② 2~4컷은 <strong>같은 대화창에서</strong> 프롬프트만 복사해서 이어서 붙여넣기!<br>
+        (새 창을 열지 말고 같은 채팅에서 계속해요)
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <button class="btn btn-gemini" onclick="copyImgPrompt(1)" style="font-size:12px;padding:9px;">🌅 1컷 프롬프트 복사</button>
+        <button class="btn btn-gemini" onclick="copyImgPrompt(2)" style="font-size:12px;padding:9px;">⚡ 2컷 프롬프트 복사</button>
+        <button class="btn btn-gemini" onclick="copyImgPrompt(3)" style="font-size:12px;padding:9px;">🔥 3컷 프롬프트 복사</button>
+        <button class="btn btn-gemini" onclick="copyImgPrompt(4)" style="font-size:12px;padding:9px;">🌈 4컷 프롬프트 복사</button>
+      </div>
+      <button onclick="window.open('https://gemini.google.com/','_blank')" style="width:100%;padding:10px;border-radius:var(--r-sm);border:1.5px solid var(--blue);background:var(--blue-light);color:var(--blue-dark);font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">🔷 Gemini 창 열기 (한 번만!)</button>
+      <div id="imgPromptMsg" style="display:none;text-align:center;font-size:12px;color:var(--teal);margin-top:6px;"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="copyStory()" style="flex:1;border:1.5px solid var(--blue);background:var(--white);color:var(--blue-dark);cursor:pointer;padding:11px;border-radius:var(--r-sm);font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:13px;">📋 이야기 복사하기</button>
+      <button class="btn btn-teal" onclick="showTab(3)" style="flex:1;">✨ 완성하기!</button>
+    </div>
+    <div id="storyCopyMsg" style="display:none;text-align:center;font-size:12px;color:var(--teal);margin-top:6px;">✅ 이야기가 복사됐어요!</div>
+  </div>
+
+  <!-- TAB 3: 완성 -->
+  <div id="page3" style="display:none;">
+    <div class="final-card" id="finalCard">
+      <div class="final-head">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px;">✨ 완성!</div>
+        <div style="font-family:'Gaegu',cursive;font-size:22px;font-weight:700;color:var(--ink);" id="finalTitle">나만의 이야기</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;" id="finalMeta"></div>
+      </div>
+      <div id="finalScenes"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-half btn-outline" onclick="window.print()" style="border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft);cursor:pointer;padding:11px;border-radius:var(--r-sm);font-family:'Noto Sans KR',sans-serif;font-weight:700;">🖨️ 인쇄하기</button>
+      <button class="btn-half btn-teal" onclick="copyText()" style="padding:11px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:700;">📋 텍스트 복사</button>
+    </div>
+    <div id="copyMsg" style="display:none;text-align:center;font-size:12px;color:var(--teal);margin-top:6px;">✅ 복사됐어요!</div>
+  </div>
+
+</main>
+
+<script>
+// ===== 상태 =====
+const QUESTIONS = [
+  `안녕! 나는 Gemini야 😊 함께 멋진 이야기를 만들어볼게!
+
+먼저 **주인공**을 정해봐요!
+이야기 속 가장 중요한 인물이에요.
+
+✏️ 이름, 나이, 어떤 아이인지 써봐요!
+
+📌 예시)
+"백설공주" → 착하고 예쁜 공주, 계모에게 쫓겨난 소녀
+"피노키오" → 나무로 만들어진 거짓말쟁이 꼭두각시 인형
+"나의 주인공" → 지호, 10살, 겁이 많지만 용감해지고 싶은 소년`,
+
+  `좋아요! **장소**를 정해봐요!
+이야기가 펼쳐지는 배경이에요.
+
+✏️ 어디에서 이야기가 시작되나요?
+
+📌 예시)
+"백설공주" → 깊은 숲속, 일곱 난쟁이의 집
+"피노키오" → 작은 목공소, 고래 뱃속
+"나의 장소" → 깊은 숲속 오두막, 신비로운 마법 학교…`,
+
+  `이제 핵심! **어떤 일이 일어났나요?**
+주인공에게 생긴 문제나 사건이에요.
+
+✏️ 어떤 일이 생겼나요? 무엇이 문제인가요?
+
+📌 예시)
+"백설공주" → 계모 왕비가 독이 든 사과를 줬어요
+"피노키오" → 거짓말을 할 때마다 코가 길어져요
+"나의 사건" → 숲속에서 길을 잃었어요, 괴물이 나타났어요…`,
+
+  `그래서 **어떻게 되었나요?**
+주인공이 문제를 해결하려고 어떤 행동을 했나요?
+
+✏️ 주인공이 어떻게 해결하려고 했나요?
+
+📌 예시)
+"백설공주" → 왕자의 입맞춤으로 잠에서 깨어났어요
+"피노키오" → 솔직하게 말하는 법을 배웠어요
+"나의 해결" → 용기를 내서 맞섰어요, 친구의 도움을 받았어요…`,
+
+  `마지막! **결론적으로 어떻게 되었나요?**
+이야기가 어떻게 끝났나요?
+
+✏️ 주인공은 어떻게 변했나요? 행복한 결말인가요?
+
+📌 예시)
+"백설공주" → 왕자와 행복하게 살았어요
+"피노키오" → 진짜 사람이 되었어요
+"나의 결말" → 용감해졌어요, 소원이 이루어졌어요…`,
+];
+
+let stepIdx = 0;
+let answers = [];
+let storyData = { sc1:'', sc2:'', sc3:'', sc4:'' };
+
+// ===== 탭 =====
+function showTab(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('page'+i).style.display = i===n ? 'block' : 'none';
+    document.getElementById('tab'+i).className = 'tab' + (i===n ? ' active' : '');
+  });
+  if (n === 3) buildFinal();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== 채팅 =====
+function addBubble(text, who) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'bubble bubble-' + who;
+  if (who === 'ai') {
+    div.innerHTML = '<div class="ai-name">🔷 Gemini</div>' + text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function updateDots() {
+  for (let i = 0; i <= 4; i++) {
+    const dot = document.getElementById('dot'+i);
+    if (!dot) continue;
+    dot.className = 'step-dot' + (i < stepIdx ? ' done' : i === stepIdx ? ' active' : '');
+  }
+}
+
+function startChat() {
+  addBubble(QUESTIONS[0], 'ai');
+  updateDots();
+}
+
+function sendAnswer() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addBubble(text, 'user');
+  answers[stepIdx] = text;
+  input.value = '';
+  stepIdx++;
+  updateDots();
+  if (stepIdx < QUESTIONS.length) {
+    setTimeout(() => addBubble(QUESTIONS[stepIdx], 'ai'), 500);
+  } else {
+    document.getElementById('inputRow').style.display = 'none';
+    document.getElementById('nextBtns').style.display = 'block';
+    setTimeout(() => {
+      addBubble('완벽해요! 🎉\n아래에서 이야기 내용을 확인하고 Gemini로 4컷을 만들어봐요!', 'ai');
+      showStorySummary();
+    }, 500);
+  }
+}
+
+let isComposing = false;
+const inputEl = document.getElementById('userInput');
+inputEl.addEventListener('compositionstart', function() { isComposing = true; });
+inputEl.addEventListener('compositionend', function() { isComposing = false; });
+inputEl.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+    e.preventDefault();
+    sendAnswer();
+  }
+});
+
+// ===== 이야기 요약 카드 =====
+function showStorySummary() {
+  const summaryText =
+    `주인공: ${answers[0]||'(미입력)'}\n장소: ${answers[1]||'(미입력)'}\n어떤 일이 일어났나요: ${answers[2]||'(미입력)'}\n어떻게 해결했나요: ${answers[3]||'(미입력)'}\n결론: ${answers[4]||'(미입력)'}`;
+
+  const div = document.getElementById('nextBtns');
+  div.innerHTML = `
+    <div style="background:var(--blue-light);border:1.5px solid #C8DEFF;border-radius:var(--r-sm);padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blue-dark);margin-bottom:8px;">📝 내가 만든 이야기 내용</div>
+      <div style="font-size:12px;color:var(--ink);line-height:1.9;white-space:pre-wrap;" id="summaryBox">${summaryText}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="copySummary()" style="flex:1;padding:8px;border-radius:var(--r-sm);border:1.5px solid var(--blue);background:var(--white);color:var(--blue-dark);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">📋 내용 복사하기</button>
+      </div>
+      <div id="summaryMsg" style="display:none;font-size:11px;color:var(--teal);margin-top:6px;text-align:center;">✅ 복사됐어요! Gemini에 붙여넣어봐요!</div>
+    </div>
+    <button class="btn btn-gemini" onclick="makeStory()">🔷 Gemini로 4컷 이야기 만들기!</button>
+  `;
+}
+
+function copySummary() {
+  var box = document.getElementById("summaryBox");
+  if (!box) { alert("복사할 내용이 없어요!"); return; }
+  var text = box.innerText || box.textContent;
+  var p1 = "위 내용으로 초등학생 이야기를 기승전결 4컷으로 만들어줘.";
+  var p2 = "이미지는 생성하지 말고 텍스트로만 답해줘!";
+  var p3 = "형식: [1컷]기-시작 [2컷]승-사건 [3컷]전-해결시도 [4컷]결-결말 각 컷은 2-3문장.";
+  var full = text + " " + p1 + " " + p2 + " " + p3;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(full).then(function() { showCopyMsg(); }).catch(function() { fallbackCopy(full); });
+  } else { fallbackCopy(full); }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    showCopyMsg();
+  } catch(e) {
+    alert('복사가 안 됐어요. 직접 선택해서 복사해봐요!');
+  }
+  document.body.removeChild(ta);
+}
+
+function showCopyMsg() {
+  const msg = document.getElementById('summaryMsg');
+  if (msg) {
+    msg.style.display = 'block';
+    setTimeout(() => { if(msg) msg.style.display='none'; }, 3000);
+  }
+}
+
+// ===== Gemini 연결 =====
+function makeStory() {
+  const prompt = `초등학생 이야기를 기승전결 4컷으로 만들어줘. 이미지는 생성하지 말고 텍스트로만 답해줘!
+
+주인공: ${answers[0]||'(미정)'}
+장소: ${answers[1]||'(미정)'}
+어떤 일이 일어났나요: ${answers[2]||'(미정)'}
+어떻게 해결했나요: ${answers[3]||'(미정)'}
+결론: ${answers[4]||'(미정)'}
+
+반드시 아래 형식으로만 답해줘. 각 컷은 2~3문장:
+[1컷] 기 — 시작
+(내용)
+[2컷] 승 — 사건
+(내용)
+[3컷] 전 — 해결 시도
+(내용)
+[4컷] 결 — 결말
+(내용)`;
+
+  window.open('https://gemini.google.com/?q=' + encodeURIComponent(prompt), '_blank');
+
+  setTimeout(() => {
+    addBubble('Gemini 창이 열렸어요! 🔷\nGemini가 만들어준 이야기를 아래 칸에 붙여넣어봐요!', 'ai');
+    const nextDiv = document.getElementById('nextBtns');
+    const pasteDiv = document.createElement('div');
+    pasteDiv.style.marginTop = '12px';
+    pasteDiv.innerHTML = `
+      <div class="lbl">📋 Gemini 이야기 붙여넣기</div>
+      <textarea id="pastArea" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;resize:none;background:var(--white);color:var(--ink);line-height:1.7;margin-bottom:8px;" placeholder="[1컷] 기 — 시작&#10;지호는 숲속 오두막에 살고 있었어요...&#10;[2컷] 승 — 사건&#10;..."></textarea>
+      <button class="btn btn-teal" onclick="parseAndShow()">✂️ 자동으로 4컷에 나누기</button>
+      <div id="parseMsg" style="display:none;font-size:12px;margin-top:6px;padding:8px 12px;border-radius:var(--r-sm);"></div>
+    `;
+    nextDiv.appendChild(pasteDiv);
+  }, 600);
+}
+
+function parseAndShow() {
+  const text = document.getElementById('pastArea').value.trim();
+  const msg = document.getElementById('parseMsg');
+  if (!text) { showMsg(msg,'⚠️ 이야기를 붙여넣어주세요!','#FFECE9','var(--coral-dark)'); return; }
+
+  function extract(n) {
+    const nextPat = n < 4 ? '\\[' + (n+1) + '컷\\]' : '~~~';
+    const re = new RegExp('\\[' + n + '컷\\]([\\s\\S]*?)(?=' + nextPat + '|$)', 'i');
+    const m = text.match(re);
+    if (!m) return '';
+    var r = m[1];
+    r = r.replace(/\*\*/g, '');
+    r = r.replace(/^[\s]*(?:기|승|전|결)\s*[—\-–:]*\s*(?:시작|사건|해결\s*시도|해결|결말)?\s*/i, '');
+    return r.trim();
+  }
+
+  const cuts = [extract(1),extract(2),extract(3),extract(4)];
+  if (!cuts.some(c=>c)) { showMsg(msg,'⚠️ [1컷] [2컷] [3컷] [4컷] 형식을 찾지 못했어요!','#FFECE9','var(--coral-dark)'); return; }
+
+  storyData = { sc1:cuts[0], sc2:cuts[1], sc3:cuts[2], sc4:cuts[3] };
+  ['cut1text','cut2text','cut3text','cut4text'].forEach((id,i) => {
+    document.getElementById(id).textContent = cuts[i] || '(내용 없음)';
+  });
+
+  showMsg(msg,'✅ 4컷으로 나눠졌어요! 스토리보드 탭으로 이동해봐요.','#D9F7EE','var(--teal-dark)');
+
+  const full = cuts.filter(Boolean).join('\n\n');
+  document.getElementById('storyText').textContent = full;
+  document.getElementById('storyPreview').style.display = 'block';
+}
+
+function showMsg(el, text, bg, color) {
+  el.style.display='block'; el.style.background=bg; el.style.color=color; el.textContent=text;
+}
+
+function copyImgPrompt(n) {
+  var scText = storyData["sc"+n] || "";
+  if (!scText) { alert("먼저 이야기를 만들어봐요!"); return; }
+  var prompt;
+  if (n === 1) {
+    prompt = "이 이야기 장면을 동화책 일러스트로 그려줘 (텍스트 없이 이미지만): " + scText + " / 캐릭터 외모를 잘 기억해둬. 다음 장면에서도 같은 캐릭터로 그려야 해!";
+  } else {
+    prompt = "앞에서 그린 캐릭터와 똑같은 외모로, 이 장면을 동화책 일러스트로 그려줘 (텍스트 없이 이미지만): " + scText + " / 캐릭터 외모는 반드시 앞 장면과 동일하게!";
+  }
+  var done = function() {
+    var msg = document.getElementById("imgPromptMsg");
+    if (msg) {
+      msg.textContent = "✅ " + n + "컷 프롬프트 복사! Gemini 채팅창에 붙여넣어봐요!";
+      msg.style.display = "block";
+      setTimeout(function(){ msg.style.display = "none"; }, 3000);
+    }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt).then(done).catch(function() { fallbackCopy(prompt); done(); });
+  } else { fallbackCopy(prompt); done(); }
+}
+
+// ===== 이미지 업로드 =====
+function triggerUpload(id) { document.getElementById(id).click(); }
+function previewImg(input, areaId) {
+  if (!input.files||!input.files[0]) return;
+  const iid = input.id;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const area = document.getElementById(areaId);
+    area.innerHTML = `<img src="${e.target.result}"><button class="img-remove" onclick="removeImg(event,'${areaId}','${iid}')">✕</button>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function removeImg(e, areaId, inputId) {
+  e.stopPropagation();
+  document.getElementById(areaId).innerHTML = `<input type="file" id="${inputId}" accept="image/*" style="display:none" onchange="previewImg(this,'${areaId}')"><span style="font-size:11px;color:#AABBD0;">🖼️ 이미지 올리기</span>`;
+}
+
+// ===== 완성 화면 =====
+function buildFinal() {
+  const name = document.getElementById('userName').value.trim();
+  document.getElementById('finalTitle').textContent = name ? name + '의 이야기' : '나만의 이야기';
+  document.getElementById('finalMeta').textContent = answers[0] ? '주인공: ' + answers[0].slice(0,30) : '';
+
+  const cuts = [
+    {label:'🌅 1컷 — 기 (시작)', bg:'#EDE9FF', tc:'#5840D8', text:storyData.sc1, n:1},
+    {label:'⚡ 2컷 — 승 (사건)', bg:'#FFECE9', tc:'#C4402E', text:storyData.sc2, n:2},
+    {label:'🔥 3컷 — 전 (해결)', bg:'#FFF3D0', tc:'#854F0B', text:storyData.sc3, n:3},
+    {label:'🌈 4컷 — 결 (결말)', bg:'#D9F7EE', tc:'#0a6b50', text:storyData.sc4, n:4},
+  ];
+
+  document.getElementById('finalScenes').innerHTML = cuts.map(c => {
+    const area = document.getElementById('imgArea'+c.n);
+    const img = area ? area.querySelector('img') : null;
+    return `<div class="final-scene">
+      ${img ? `<img src="${img.src}">` : ''}
+      <div>
+        <div class="final-label" style="background:${c.bg};color:${c.tc};">${c.label}</div>
+        <div style="font-size:13px;line-height:1.75;color:var(--ink);white-space:pre-wrap;">${c.text||'(내용 없음)'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyStory() {
+  var parts = [];
+  if (storyData.sc1) parts.push("[1컷] 기 - 시작");
+  if (storyData.sc1) parts.push(storyData.sc1);
+  if (storyData.sc2) parts.push("[2컷] 승 - 사건");
+  if (storyData.sc2) parts.push(storyData.sc2);
+  if (storyData.sc3) parts.push("[3컷] 전 - 해결 시도");
+  if (storyData.sc3) parts.push(storyData.sc3);
+  if (storyData.sc4) parts.push("[4컷] 결 - 결말");
+  if (storyData.sc4) parts.push(storyData.sc4);
+  if (!parts.length) { alert("먼저 이야기를 만들어봐요!"); return; }
+  var full = parts.join("\n");
+  var done = function() {
+    var msg = document.getElementById("storyCopyMsg");
+    if (msg) { msg.style.display = "block"; setTimeout(function(){ msg.style.display = "none"; }, 2500); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(full).then(done).catch(function() { fallbackCopy(full); done(); });
+  } else { fallbackCopy(full); done(); }
+}
+
+function copyText() {
+  const name = document.getElementById('userName').value.trim();
+  const text = `📖 ${name ? name+'의 이야기' : '나만의 이야기'}\n\n🌅 1컷(기): ${storyData.sc1}\n\n⚡ 2컷(승): ${storyData.sc2}\n\n🔥 3컷(전): ${storyData.sc3}\n\n🌈 4컷(결): ${storyData.sc4}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('copyMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display='none', 2500);
+  });
+}
+
+// ===== 저장 =====
+const SAVE_KEY = 'story_gemini_v1';
+function saveData() {
+  const name = document.getElementById('userName').value.trim();
+  localStorage.setItem(SAVE_KEY, JSON.stringify({ name, answers, storyData }));
+  const msg = document.getElementById('saveMsg');
+  msg.textContent = name ? '✅ ' + name : '✅';
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display='none', 2000);
+}
+
+function resetChat() {
+  stepIdx = 0; answers = [];
+  document.getElementById('chatArea').innerHTML = '';
+  document.getElementById('inputRow').style.display = 'flex';
+  document.getElementById('nextBtns').innerHTML = '';
+  document.getElementById('storyPreview').style.display = 'none';
+  startChat();
+}
+
+// ===== 초기화 =====
+window.addEventListener('load', function() {
+  startChat();
+  try {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    if (data.name) document.getElementById('userName').value = data.name;
+    if (data.storyData) {
+      storyData = data.storyData;
+      ['cut1text','cut2text','cut3text','cut4text'].forEach((id,i) => {
+        const key = 'sc'+(i+1);
+        if (storyData[key]) document.getElementById(id).textContent = storyData[key];
+      });
+    }
+    if (data.answers) answers = data.answers;
+  } catch(e) {}
+});
+</script>
+</body>
+</html>
