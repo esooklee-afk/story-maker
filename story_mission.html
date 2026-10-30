@@ -217,6 +217,9 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .ms-cut{display:flex;gap:10px;align-items:center}
 .ms-cut img{width:72px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0}
 .pill-name{border:1.5px dashed var(--purple);background:var(--white);color:var(--purple-dark);cursor:pointer;font-family:inherit;max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resume-box{background:var(--purple-light);border-radius:16px;padding:14px 12px;margin:14px auto 4px;max-width:340px;font-size:14px;color:var(--purple-dark)}
+.resume-info{font-size:13px;margin:4px 0 12px;color:var(--ink-soft)}
+.or-line{font-size:12px;color:var(--ink-soft);margin:16px 0 -6px}
 </style>
 </head>
 <body>
@@ -465,7 +468,7 @@ const PRAISE = ['오, 멋진 생각이야!','와 정말 재미있다!','상상�
 const SAVE_KEY = 'story_mission_v1';
 const blankBoard = () => [0,1,2,3].map(() => ({ camera:'', line:'', sound:'', mood:'', img:'' }));
 let S = { name:'', xp:0, done:{}, a:{}, scenes:['','','',''], board:blankBoard() };
-let view = { screen:'home', mission:null, q:0, cut:0, drawMode:'draw' };
+let view = { screen:'start', mission:null, q:0, cut:0, drawMode:'draw' };
 
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){ toast('저장 공간이 꽉 찼어요. 그림 크기를 줄여 볼게요!'); } }
 function load(){ try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)); if (d && d.name) S = Object.assign(S, d); }catch(e){} }
@@ -639,7 +642,7 @@ function renderHeader(){
 function go(screen, extra){ Object.assign(view, { screen }, extra||{}); render(); window.scrollTo({ top:0, behavior:'smooth' }); }
 function render(){
   renderHeader();
-  if (!S.name) return renderStart();
+  if (!S.name || view.screen === 'start') return renderStart();
   if (!genre() || view.screen === 'genre') return renderGenre();
   if (view.screen === 'home') return renderMap();
   if (view.screen === 'mission'){
@@ -653,21 +656,42 @@ function render(){
 
 // ===== 시작 =====
 function renderStart(){
+  // 들어올 때마다 이름을 확인해요. 저장된 이야기가 있으면 이어 하거나, 새 작가로 시작할 수 있어요
+  const g = S.name && genre();
+  const doneN = g ? MISSIONS.filter(m => S.done[m.id]).length : 0;
   $('app').innerHTML = `
     <div class="card hero-start">
       <div class="big">🧚</div>
       <h1 class="fun">이야기 탐험대</h1>
-      <p>먼저 만들고 싶은 <b>이야기 종류</b>를 골라요.<br>장르마다 다른 미션 코스를 깨면 나만의 <b>이야기</b>와 <b>스토리보드</b>가 완성돼요 🎬</p>
+      ${S.name ? `
+      <div class="resume-box">
+        <div>다시 왔구나! 저장된 이야기가 있어요 📒</div>
+        <div class="resume-info"><b>${esc(S.name)}</b> 작가 · ${g ? `${g.icon} ${g.name} · 미션 ${doneN}/${MISSIONS.length}` : '장르 고르는 중'} · ⭐ ${S.xp}</div>
+        <button class="btn btn-purple" style="max-width:280px" onclick="continueGame()">▶️ ${esc(S.name)} 작가로 이어서 하기</button>
+      </div>
+      <div class="or-line">또는 새 작가로 시작하기</div>`
+      : `<p>먼저 만들고 싶은 <b>이야기 종류</b>를 골라요.<br>장르마다 다른 미션 코스를 깨면 나만의 <b>이야기</b>와 <b>스토리보드</b>가 완성돼요 🎬</p>`}
       <input class="name-in" id="nameIn" maxlength="12" placeholder="작가 이름을 써 줘요">
-      <button class="btn btn-purple" style="max-width:280px" onclick="startGame()">🚀 탐험 시작!</button>
+      <button class="btn ${S.name ? 'btn-ghost' : 'btn-purple'}" style="max-width:280px" onclick="startGame()">🚀 ${S.name ? '새 작가로 시작!' : '탐험 시작!'}</button>
       <button class="btn btn-ghost" style="max-width:280px;margin-top:10px" onclick="pickSaveFile()">📂 저장한 이야기 불러오기</button>
     </div>`;
-  const inp = $('nameIn'); inp.focus();
+  const inp = $('nameIn'); if (!S.name) inp.focus();
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) startGame(); });
+}
+function continueGame(){
+  go(genre() ? 'home' : 'genre');
+  toast(`어서 와, ${S.name} 작가님! 이어서 만들어요 ✨`);
 }
 function startGame(){
   const n = $('nameIn').value.trim();
-  if (!n){ toast('작가 이름을 먼저 써 줘요! ✏️'); return; }
+  if (!n){ toast('작가 이름을 먼저 써 줘요! ✏️'); $('nameIn').focus(); return; }
+  if (S.name){
+    // 같은 이름이면 이어서 하고, 다른 이름이면 새 이야기를 시작해요
+    if (n === S.name) return continueGame();
+    if ((S.genre || S.xp) && !confirm(`새 작가로 시작하면 「${S.name}」 작가의 이야기는 이 컴퓨터에서 지워져요.\n(남겨 두려면 취소하고 이어서 하기 → 💾 파일로 저장을 먼저 해요)\n\n${n} 작가로 새로 시작할까요?`)) return;
+    S = { name:n, xp:0, done:{}, a:{}, scenes:['','','',''], board:blankBoard(), deep:S.deep };
+    MISSIONS = [];
+  }
   S.name = n; save(); go('genre');
 }
 
