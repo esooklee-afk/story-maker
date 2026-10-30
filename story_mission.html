@@ -89,6 +89,10 @@ main{max-width:720px;margin:18px auto;padding:0 16px}
 .bub{max-width:86%;padding:11px 15px;border-radius:18px;font-size:14px;line-height:1.7;white-space:pre-wrap;animation:pop .25s ease-out}
 .bub.ai{background:var(--purple-light);color:var(--purple-dark);align-self:flex-start;border-bottom-left-radius:6px}
 .bub.me{background:var(--blue);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.bub.think{background:#FFF8E6;color:#6B4A06;border:1.5px dashed #F5C46B}
+.chip.starter{border-style:dashed;border-color:#F5C46B;color:#6B4A06}
+.deep-toggle{border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:var(--white);color:var(--ink-soft)}
+.deep-toggle.on{background:#FFF8E6;border-color:#F5C46B;color:#6B4A06}
 .bub.reward{align-self:center;background:var(--amber-light);color:var(--amber-dark);font-weight:700;font-size:13px;padding:6px 14px}
 .bub .who{font-size:11px;font-weight:700;opacity:.7;margin-bottom:2px}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
@@ -195,6 +199,23 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
   .card{border:none;padding:0}
   .sb{break-inside:avoid}
 }
+.save-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+.save-note{font-size:12px;color:var(--ink-soft);margin-right:auto}
+.resume{font-size:12px;font-weight:700;color:var(--purple,#7c5cff);white-space:nowrap}
+.modal.my-story{max-width:520px;text-align:left;padding:22px 18px;max-height:88vh;display:flex;flex-direction:column}
+.my-story h3{text-align:center;font-size:28px}
+.ms-body{overflow-y:auto;margin:4px 0 14px;padding-right:4px}
+.ms-sec{border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.ms-sec.empty{opacity:.5}
+.ms-h{font-weight:700;color:var(--purple-dark);margin-bottom:6px}
+.ms-h small{font-weight:400;color:var(--ink-soft);margin-left:4px}
+.ms-item{font-size:14px;line-height:1.6;padding:4px 0;border-top:1px dashed var(--border)}
+.ms-item:first-of-type{border-top:0}
+.ms-lbl{display:inline-block;font-size:11px;font-weight:700;background:var(--purple-light);color:var(--purple-dark);border-radius:99px;padding:1px 8px;margin-right:6px}
+.ms-why{font-size:13px;color:var(--ink-soft);margin:2px 0 0 10px}
+.ms-none{font-size:13px;color:var(--ink-soft)}
+.ms-cut{display:flex;gap:10px;align-items:center}
+.ms-cut img{width:72px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -212,6 +233,7 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 </header>
 
 <main id="app"></main>
+<input type="file" id="loadFile" accept=".json,application/json" hidden onchange="importSave(this)">
 
 <script>
 // ===== 미션 정의 =====
@@ -415,7 +437,7 @@ let MISSIONS = [];
 const LEVELS = [
   { xp:0,   name:'🌱 새싹 작가' },
   { xp:80,  name:'✏️ 꼬마 작가' },
-  { xp:180, name:'📚 이야기꾼' },
+  { xp:180, name:'🎬 크리에이터' },
   { xp:300, name:'🪄 이야기 마법사' },
   { xp:420, name:'👑 스토리 마스터' },
 ];
@@ -446,6 +468,43 @@ let view = { screen:'home', mission:null, q:0, cut:0, drawMode:'draw' };
 
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){ toast('저장 공간이 꽉 찼어요. 그림 크기를 줄여 볼게요!'); } }
 function load(){ try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)); if (d && d.name) S = Object.assign(S, d); }catch(e){} }
+
+// ===== 중간 저장 파일 =====
+// 브라우저에는 답할 때마다 자동 저장되지만, 다른 컴퓨터에서 이어 하려면 파일로 내려받아 가져가요
+function exportSave(){
+  const d = new Date(), day = `${d.getMonth()+1}월${d.getDate()}일`;
+  const blob = new Blob([JSON.stringify({ app:'story_mission', v:1, S })], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `이야기탐험대_${S.name}_${day}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showModal('💾', '중간 저장 완료!', `<b>${esc(a.download)}</b> 파일이 다운로드 폴더에 저장됐어요.<br><br>다음에 <b>📂 불러오기</b>로 이 파일을 고르면<br>이어서 만들 수 있어요!`, '좋아요');
+}
+function pickSaveFile(){ $('loadFile').click(); }
+function importSave(input){
+  const f = input.files[0]; input.value = '';
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let d;
+    try{ d = JSON.parse(r.result); }catch(e){ d = null; }
+    const s = d && d.app === 'story_mission' ? d.S : null;
+    if (!s || !s.name){ toast('이야기 탐험대 저장 파일이 아니에요 😢'); return; }
+    if (S.name && Object.keys(S.done).length && !confirm(`지금 만들던 이야기 대신 「${s.name}」 작가의 저장 파일을 불러올까요?\n지금 이야기는 사라져요.`)) return;
+    S = Object.assign({ name:'', xp:0, done:{}, a:{}, scenes:['','','',''], board:blankBoard() }, s);
+    MISSIONS = genre() ? buildCourse(genre()) : [];
+    save(); go(genre() ? 'home' : 'genre');
+    toast(`📂 ${s.name} 작가의 이야기를 불러왔어요! 이어서 만들어요 ✨`);
+  };
+  r.readAsText(f);
+}
+const saveBar = () => `
+  <div class="save-bar no-print">
+    <span class="save-note">✅ 답할 때마다 이 컴퓨터에 자동 저장돼요</span>
+    <button class="back" onclick="exportSave()">💾 파일로 저장</button>
+    <button class="back" onclick="pickSaveFile()">📂 불러오기</button>
+  </div>`;
 
 // ===== 도우미 =====
 const $ = id => document.getElementById(id);
@@ -533,19 +592,29 @@ function getQ(mi, n){ return MISSIONS[mi].qs[n]; }
 function storySoFar(){
   const g = genre(), L = [];
   if (g) L.push(`장르: ${g.name} — ${g.guide}`);
-  MISSIONS.forEach(m => (m.qs || []).forEach(q => { if (S.a[q.k]) L.push(`${q.label}: ${S.a[q.k]}`); }));
+  MISSIONS.forEach(m => (m.qs || []).forEach(q => {
+    if (S.a[q.k]) L.push(`${q.label}: ${S.a[q.k]}`);
+    if (S.a[q.k + '_why']) L.push(`  └ 아이의 생각(왜/만약): ${S.a[q.k + '_why']}`);
+  }));
   return L.join('\n');
 }
+// 소크라테스식: Gemini도 답을 주지 않고, 아이가 스스로 생각하도록 되물어 줘요
+const SOCRATIC_RULE = `너는 초등학생과 이야기를 만드는 소크라테스 선생님이야.
+- 절대로 정답이나 완성된 문장을 먼저 알려주지 마.
+- 대신 아이가 스스로 떠올릴 수 있게 쉬운 질문을 2~3개 해줘. ("왜 그럴까?", "만약 ~라면?", "다른 인물은 어떤 마음일까?", "앞에서 정한 내용과 어떻게 이어질까?" 같은 질문)
+- 질문 뒤에, 아이가 그래도 막히면 볼 수 있게 "🔑 작은 힌트"를 한 줄만 줘.
+- 쉬운 말, 짧은 문장, 이모지를 써줘.`;
 function askIdea(){
-  const m = MISSIONS[view.mission], q = getQ(view.mission, view.q);
-  const prompt = `나는 초등학생이고 이야기를 만들고 있어. 정답을 알려주지 말고, 내가 스스로 고를 수 있게 짧고 재미있는 아이디어 3개만 쉬운 말로 알려줘. 이모지도 넣어줘!
+  const q = getQ(view.mission, view.q);
+  const now = view.follow ? followText(q) : fill(q.q);
+  const prompt = `${SOCRATIC_RULE}
 
 [지금까지 만든 이야기]
 ${storySoFar() || '(아직 없음)'}
 
-[지금 질문]
-${fill(q.q).replace(/\n/g,' ')}`;
-  openGemini(prompt, 'Gemini에게 아이디어를 물어봤어요! 마음에 드는 걸 골라서 내 말로 바꿔 써 봐요 💡');
+[아이가 지금 고민하는 질문]
+${now.replace(/\n/g,' ')}`;
+  openGemini(prompt, 'Gemini 선생님이 질문으로 도와줄 거예요! 질문에 답하다 보면 내 생각이 떠올라요 🧠');
 }
 
 // ===== 헤더 =====
@@ -583,6 +652,7 @@ function renderStart(){
       <p>먼저 만들고 싶은 <b>이야기 종류</b>를 골라요.<br>장르마다 다른 미션 코스를 깨면 나만의 <b>이야기</b>와 <b>스토리보드</b>가 완성돼요 🎬</p>
       <input class="name-in" id="nameIn" maxlength="12" placeholder="작가 이름을 써 줘요">
       <button class="btn btn-purple" style="max-width:280px" onclick="startGame()">🚀 탐험 시작!</button>
+      <button class="btn btn-ghost" style="max-width:280px;margin-top:10px" onclick="pickSaveFile()">📂 저장한 이야기 불러오기</button>
     </div>`;
   const inp = $('nameIn'); inp.focus();
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) startGame(); });
@@ -601,12 +671,14 @@ function renderMap(){
     <div class="map-head"><h2 class="fun">🗺️ ${esc(S.name)} 작가의 미션 지도</h2></div>
     <div class="row" style="align-items:center;margin:-6px 0 14px">
       <span class="genre-tag">${genre().icon} ${genre().name} 코스</span>
-      <button class="back no-print" style="margin-left:auto" onclick="go('genre')">📚 장르 바꾸기</button>
+      <button class="deep-toggle no-print ${deepOn()?'on':''}" onclick="toggleDeep()" title="답할 때마다 별이가 '왜?', '만약?' 하고 한 번 더 물어봐요">🧠 생각 질문 ${deepOn()?'켜짐':'꺼짐'}</button>
+      <button class="back no-print" style="margin-left:auto" onclick="showMyStory()">📖 내 이야기 보기</button>
+      <button class="back no-print" onclick="go('genre')">📚 장르 바꾸기</button>
     </div>
     <div class="map">${MISSIONS.map((m,i) => {
       const done = S.done[m.id], open = unlocked(i);
       const cls = done ? 'done' : open ? 'open' : 'lock';
-      const st = done ? '⭐' : open ? '▶️' : '🔒';
+      const st = done ? '⭐' : !open ? '🔒' : resumeQ(m) ? '<span class="resume">이어서 ▶️</span>' : '▶️';
       return `<div class="node ${cls}" ${open ? `onclick="startMission(${i})"` : ''}>
         <div class="ic" style="background:var(--${m.color}-light)">${m.icon}</div>
         <div><div class="nt">MISSION ${i+1}</div><div class="nn fun">${m.name}</div><div class="nd">${m.desc}</div></div>
@@ -617,6 +689,7 @@ function renderMap(){
       <div class="badges">${MISSIONS.map(m => `<span class="badge ${S.done[m.id]?'':'off'}">${m.badge}</span>`).join('')}</div>
     </div>
     ${all ? `<button class="btn btn-gemini" style="margin-bottom:10px" onclick="go('book')">📕 완성된 스토리북 보기</button>` : ''}
+    ${saveBar()}
     <button class="btn btn-ghost no-print" onclick="resetAll()">🔄 처음부터 새 이야기 만들기</button>`;
 }
 function resetAll(){
@@ -625,13 +698,55 @@ function resetAll(){
   S = { name, xp:0, done:{}, a:{}, scenes:['','','',''], board:blankBoard() };
   MISSIONS = []; save(); go('genre');
 }
-function startMission(i){ go('mission', { mission:i, q:0, cut:0 }); }
+function toggleDeep(){
+  S.deep = !deepOn(); save(); render();
+  toast(deepOn() ? '🧠 생각 질문 켜짐! 별이가 "왜?", "만약?" 하고 더 물어볼 거예요' : '생각 질문을 껐어요. 기본 질문만 나와요');
+}
+// 깨지 않은 미션은 답하지 않은 첫 질문부터 이어서 해요
+function resumeQ(m){
+  if (!m.qs || S.done[m.id]) return 0;
+  const n = m.qs.findIndex(q => !S.a[q.k]);
+  return n < 0 ? 0 : n;
+}
+function startMission(i){ go('mission', { mission:i, q:resumeQ(MISSIONS[i]), cut:0, follow:false, fcount:0 }); }
 function missionHeader(m, i){
   return `<div class="m-top no-print">
     <button class="back" onclick="go('home')">← 지도</button>
     <div class="m-title fun">${m.icon} ${m.name}</div>
     ${m.qs ? `<div class="qdots">${m.qs.map((_,n) => `<span class="${n < view.q ? 'done' : n === view.q ? 'now' : ''}"></span>`).join('')}</div>` : ''}
+    <button class="back" style="margin-left:auto;white-space:nowrap" onclick="showMyStory()">📖 내 이야기</button>
   </div>`;
+}
+
+// ===== 지금까지 쓴 내 이야기 =====
+// 미션 중간에도 언제든 열어서 내가 정한 것들을 다시 볼 수 있어요
+function showMyStory(){
+  const g = genre();
+  const parts = MISSIONS.map(m => {
+    let body = '';
+    if (m.qs){
+      body = m.qs.filter(q => S.a[q.k]).map(q => `
+        <div class="ms-item"><span class="ms-lbl">${esc(q.label)}</span>${esc(S.a[q.k])}
+        ${S.a[q.k + '_why'] ? `<div class="ms-why">🧠 ${esc(S.a[q.k + '_why'])}</div>` : ''}</div>`).join('');
+    } else if (m.type === 'write'){
+      body = S.scenes.map((t,n) => t ? `<div class="ms-item"><span class="ms-lbl">${n+1}컷</span>${esc(t)}</div>` : '').join('');
+    } else if (m.type === 'board'){
+      body = S.board.map((b,n) => (b.img || b.camera || b.line) ? `<div class="ms-item ms-cut">
+        ${b.img ? `<img src="${b.img}" alt="">` : ''}<div><span class="ms-lbl">${n+1}컷</span>${esc(b.camera)}${b.line ? ` · 💬 "${esc(b.line)}"` : ''}</div></div>` : '').join('');
+    }
+    const st = S.done[m.id] ? '⭐' : body ? '✏️ 쓰는 중' : '';
+    return `<div class="ms-sec ${body ? '' : 'empty'}"><div class="ms-h">${m.icon} ${m.name} <small>${st}</small></div>
+      ${body || '<div class="ms-none">아직 비어 있어요</div>'}</div>`;
+  }).join('');
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal my-story">
+    <h3 class="fun">📖 ${esc(S.name)} 작가의 이야기</h3>
+    ${g ? `<div style="text-align:center;margin-bottom:8px"><span class="genre-tag">${g.icon} ${g.name}</span></div>` : ''}
+    <div class="ms-body">${parts}</div>
+    <button class="btn btn-purple">계속 쓰러 가기 ✏️</button></div>`;
+  bg.querySelector('button').onclick = () => bg.remove();
+  bg.addEventListener('click', e => { if (e.target === bg) bg.remove(); });
+  document.body.appendChild(bg);
 }
 function completeMission(){
   const m = MISSIONS[view.mission];
@@ -718,40 +833,102 @@ function renderChat(){
       <textarea id="ans" rows="2" placeholder="내 생각을 써 봐요 (위의 보기를 눌러도 돼요)"></textarea>
       <button class="send" onclick="sendAnswer()">➤</button>
     </div>
-    <button class="idea" onclick="askIdea()">💡 잘 모르겠어요 → Gemini에게 아이디어 물어보기</button>`;
+    <button class="idea" onclick="askIdea()">💡 잘 모르겠어요 → Gemini 선생님께 생각 도움 받기</button>`;
   // 이미 답한 질문은 대화로 다시 보여 줘요
-  for (let n = 0; n < view.q; n++){ const q = getQ(i, n); bubble(fill(q.q), 'ai', true); bubble(S.a[q.k], 'me', true); }
+  for (let n = 0; n < view.q; n++){
+    const q = getQ(i, n), why = S.a[q.k + '_why'];
+    bubble(fill(q.q), 'ai', true); bubble(S.a[q.k], 'me', true);
+    if (why && FOLLOW[q.k]){ bubble(followText(q), 'think', true); bubble(why, 'me', true); }
+  }
   askQ();
   const ta = $('ans');
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendAnswer(); } });
 }
 function bubble(text, who, instant){
   const chat = $('chat'); if (!chat) return;
-  const d = document.createElement('div'); d.className = 'bub ' + who;
+  const d = document.createElement('div'); d.className = 'bub ' + (who === 'think' ? 'ai think' : who);
   if (instant) d.style.animation = 'none';
-  d.innerHTML = (who === 'ai' ? '<div class="who">🧚 별이</div>' : '') + esc(text);
+  const head = who === 'ai' ? '<div class="who">🧚 별이</div>'
+    : who === 'think' ? `<div class="who">🧚 별이 · 🧠 생각 질문</div>` : '';
+  d.innerHTML = head + esc(text);
   chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
 }
 function askQ(){
   const m = MISSIONS[view.mission], q = getQ(view.mission, view.q);
+  view.follow = false;
   bubble(fill(q.q), 'ai');
   $('chipBox').innerHTML = q.chips.map(c => `<button class="chip" onclick="pickChip(this)">${esc(fill(c))}</button>`).join('');
-  const ta = $('ans'); ta.value = S.a[q.k] || ''; ta.focus();
+  const ta = $('ans'); ta.value = S.a[q.k] || ''; ta.placeholder = '내 생각을 써 봐요 (위의 보기를 눌러도 돼요)'; ta.focus();
 }
 function pickChip(el){ const ta = $('ans'); ta.value = el.textContent; ta.focus(); }
+
+// ===== 소크라테스식 생각 질문 =====
+// 답을 정해 주지 않고 "왜?", "만약?", "다른 사람이라면?"을 되물어서 아이가 스스로 이야기를 깊게 만들어요
+const FOLLOW = {
+  heroWeak:{ t:'이유 찾기',   q:'{heroName}{은는} 왜 그럴까? 🤔\n예전에 무슨 일이 있었던 걸까?' },
+  feeling: { t:'마음 읽기',   q:'{heroName}{이가} 왜 그런 마음이 들었을까?\n너라면 어떤 기분이었을 것 같아? 💭' },
+  cause:   { t:'이유 찾기',   q:'왜 그런 일이 생겼다고 생각해? 🤔\n이야기 속에 그걸 알려 주는 단서를 하나 숨긴다면 뭘까?' },
+  reason:  { t:'다른 입장',   q:'그때 친구는 어떤 마음이었을까?\n친구 입장에서 생각해 볼래? 👀' },
+  try1:    { t:'다른 방법',   q:'왜 처음엔 잘 안 됐을까?\n다른 방법은 없었을까? 🔄' },
+  gate2:   { t:'만약에',     q:'만약 여기서 {heroName}{이가} 포기했다면 어떻게 됐을까? 🔮' },
+  choice:  { t:'이유 찾기',   q:'{heroName}{은는} 왜 그렇게 행동했을까?\n다르게 할 수도 있었을까? 🔄' },
+  suspect: { t:'근거 찾기',   q:'왜 그 사람을 의심했어? 🔍\n어떤 단서 때문이야?' },
+  culprit: { t:'다른 입장',   q:'{culprit}{은는} 왜 그런 일을 했을까?\n그쪽의 마음을 상상해 볼래? 🕵️' },
+  helper:  { t:'다른 입장',   q:'{helper}{은는} 왜 {heroName}{을를} 도와줬을까?\n도와준 쪽의 입장에서 생각해 봐! 👀' },
+  final:   { t:'원인 찾기',   q:'그 방법은 왜 성공했을까?\n처음과 무엇이 달라졌을까? 💡' },
+  how:     { t:'근거 찾기',   q:'그 증거가 왜 결정적이었을까?\n다른 사람은 왜 그걸 못 봤을까? 💡' },
+  ending:  { t:'만약에',     q:'만약 이야기가 반대로 끝났다면 어땠을까? 🔮\n왜 이 결말이 더 좋아?' },
+  change:  { t:'근거 찾기',   q:'이야기 속 어느 장면을 보면 {heroName}{이가} 달라진 걸 알 수 있을까? 🔎' },
+  lesson:  { t:'생활과 연결', q:'이 교훈이 진짜 생활에서도 필요했던 적이 있어?\n언제였는지 떠올려 볼래? 🌱' },
+};
+const THINK_PRAISE = ['오~ 그런 이유가 있었구나! 🧠','생각이 쑥쑥 깊어지고 있어 🌱','와, 그건 진짜 작가만 할 수 있는 생각이야!','그 생각 덕분에 이야기가 더 살아났어 ✨'];
+const SKIP = '🤷 잘 모르겠어, 다음에 생각할래';
+const MAX_FOLLOW = 2;   // 한 미션에서 생각 질문은 최대 2번까지만 (아이들이 지치지 않게)
+const deepOn = () => S.deep !== false;
+function followText(q){ return `[${FOLLOW[q.k].t}] ` + fill(FOLLOW[q.k].q); }
+function askFollow(q){
+  view.follow = true; view.fcount = (view.fcount || 0) + 1;
+  bubble(followText(q), 'think');
+  $('chipBox').innerHTML = `<button class="chip" onclick="pickChip(this)">${SKIP}</button>`
+    + ['왜냐하면 ','만약에 ','내 생각에는 '].map(s => `<button class="chip starter" onclick="startWith(this)">${s}…</button>`).join('');
+  const ta = $('ans'); ta.value = S.a[q.k + '_why'] || ''; ta.placeholder = '정답은 없어! 떠오르는 대로 써 봐요 🧠'; ta.focus();
+}
+function startWith(el){ const ta = $('ans'); ta.value = el.textContent.replace('…',''); ta.focus(); }
+function answerFollow(v){
+  const q = getQ(view.mission, view.q);
+  view.follow = false;
+  bubble(v, 'me'); $('ans').value = ''; $('chipBox').innerHTML = '';
+  if (v === SKIP){ setTimeout(() => bubble('괜찮아! 생각은 천천히 해도 돼 😊', 'ai'), 400); setTimeout(nextQ, 900); return; }
+  const isNew = !S.a[q.k + '_why'];
+  S.a[q.k + '_why'] = v; save();
+  if (isNew){ S.thinks = (S.thinks || 0) + 1; addXP(15); setTimeout(() => bubble('🧠 깊은 생각 ⭐ +15', 'reward'), 250); }
+  setTimeout(() => bubble(THINK_PRAISE[Math.floor(Math.random()*THINK_PRAISE.length)], 'ai'), 500);
+  setTimeout(nextQ, 1100);
+}
+
 function sendAnswer(){
   const ta = $('ans'), v = ta.value.trim();
   if (!v){ toast('생각을 한 줄이라도 써 줘요! 보기를 눌러도 돼요 😊'); return; }
+  if (view.follow) return answerFollow(v);
   const m = MISSIONS[view.mission], q = getQ(view.mission, view.q);
   const isNew = !S.a[q.k];
   S.a[q.k] = v; save();
   bubble(v, 'me'); ta.value = ''; $('chipBox').innerHTML = '';
   if (isNew){ addXP(10); setTimeout(() => bubble('⭐ +10', 'reward'), 250); }
+  if (deepOn() && FOLLOW[q.k] && (view.fcount || 0) < MAX_FOLLOW){
+    setTimeout(() => bubble(PRAISE[Math.floor(Math.random()*PRAISE.length)], 'ai'), 500);
+    setTimeout(() => askFollow(q), 1100);
+    return;
+  }
+  nextQ(true);
+}
+function nextQ(praise){
+  const m = MISSIONS[view.mission];
   view.q++;
   document.querySelectorAll('.qdots span').forEach((s,n) => s.className = n < view.q ? 'done' : n === view.q ? 'now' : '');
   if (view.q < m.qs.length){
-    setTimeout(() => { bubble(PRAISE[Math.floor(Math.random()*PRAISE.length)], 'ai'); }, 500);
-    setTimeout(askQ, 1100);
+    if (praise) setTimeout(() => { bubble(PRAISE[Math.floor(Math.random()*PRAISE.length)], 'ai'); }, 500);
+    setTimeout(askQ, praise ? 1100 : 300);
   } else {
     setTimeout(() => bubble('미션의 모든 질문에 답했어! 정말 대단해 🎉', 'ai'), 500);
     setTimeout(completeMission, 1300);
@@ -782,11 +959,23 @@ function renderWrite(){
         <div class="sh fun">${n+1}컷<span class="tag ${c.cls}">${c.t} · ${c.d}</span></div>
         <textarea id="sc${n}" oninput="S.scenes[${n}]=this.value;save()" placeholder="${n+1}번째 장면 이야기를 2~3문장으로 써 봐요">${esc(S.scenes[n])}</textarea>
       </div>`).join('')}
+      <div class="tip" style="margin-top:4px">🧠 <b>고쳐 쓰기 전에</b> Gemini 선생님께 내 이야기에 대한 <b>질문</b>을 받아 봐요.<br>질문에 답하면서 이야기를 더 좋게 고쳐 쓰면 돼요! (선생님은 대신 고쳐 주지 않아요)</div>
+      <button class="btn btn-ghost" style="margin-bottom:8px" onclick="askStoryQuestions()">🤔 Gemini 선생님께 내 이야기 질문 받기</button>
       <button class="btn btn-purple" onclick="finishWrite()">✅ 이야기 완성! 미션 클리어</button>
     </div>`;
 }
+function askStoryQuestions(){
+  if (S.scenes.every(s => !s.trim())){ toast('먼저 4컷 이야기를 채워 줘요! 그다음 질문을 받아요 📖'); return; }
+  const prompt = `${SOCRATIC_RULE}
+
+아래는 초등학생이 만든 4컷 이야기야. 이야기를 대신 고쳐 쓰지 말고, 아이가 스스로 더 좋게 고칠 수 있도록 컷마다 질문을 1개씩(모두 4개) 해줘.
+질문은 "왜?", "만약?", "그때 다른 인물은 어떤 마음이었을까?", "어떤 소리와 모습이 보였을까?" 같은 것으로 해줘.
+
+${S.scenes.map((s,n) => `[${n+1}컷 ${CUT_INFO[n].t}] ${s || '(아직 비어 있음)'}`).join('\n')}`;
+  openGemini(prompt, 'Gemini 선생님이 내 이야기에 질문을 해 줄 거예요. 답을 생각하며 이야기를 고쳐 봐요 ✏️');
+}
 function writeWithGemini(){
-  const prompt = `초등학생이 만든 이야기 재료로 그림책 이야기를 기승전결 4컷으로 만들어줘. 아이가 고른 내용은 바꾸지 말고 꼭 살려줘. ${genre() ? `'${genre().name}' 장르의 특징이 잘 드러나게 써줘. ` : ''}쉬운 말로, 각 컷은 2~3문장. 이미지는 만들지 말고 글로만 답해줘.
+  const prompt = `초등학생이 만든 이야기 재료로 그림책 이야기를 기승전결 4컷으로 만들어줘. 아이가 고른 내용은 바꾸지 말고 꼭 살려줘. 특히 "아이의 생각(왜/만약)"에 담긴 이유와 마음을 이야기 속에 자연스럽게 녹여줘. ${genre() ? `'${genre().name}' 장르의 특징이 잘 드러나게 써줘. ` : ''}쉬운 말로, 각 컷은 2~3문장. 이미지는 만들지 말고 글로만 답해줘.
 
 ${storySoFar()}
 
@@ -980,7 +1169,7 @@ function renderBook(){
     <div class="card">
       <div class="book-title fun">📕 ${esc(a.title || '나의 이야기')}</div>
       ${genre() ? `<div style="text-align:center;margin:6px 0"><span class="genre-tag">${genre().icon} ${genre().name}</span></div>` : ''}
-      <div class="book-by">글·그림·감독 <b>${esc(S.name)}</b> · ${level().name}</div>
+      <div class="book-by">글·그림·감독 <b>${esc(S.name)}</b> · ${level().name}${S.thinks ? ` · 🧠 깊은 생각 ${S.thinks}개` : ''}</div>
       <div class="sb-grid">${[0,1,2,3].map(n => { const b = S.board[n], c = CUT_INFO[n];
         const mood = MOODS.find(x => x.v === b.mood), cam = CAMERAS.find(x => x.v === b.camera);
         return `<div class="sb">
