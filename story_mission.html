@@ -216,6 +216,7 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .ms-none{font-size:13px;color:var(--ink-soft)}
 .ms-cut{display:flex;gap:10px;align-items:center}
 .ms-cut img{width:72px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.pill-name{border:1.5px dashed var(--purple);background:var(--white);color:var(--purple-dark);cursor:pointer;font-family:inherit;max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -618,10 +619,17 @@ ${now.replace(/\n/g,' ')}`;
 }
 
 // ===== 헤더 =====
+// 작가 이름은 시작할 때 저장되고, 위쪽 ✏️ 이름을 눌러 언제든 바꿀 수 있어요
+function renameAuthor(){
+  const n = (prompt('새 작가 이름을 써 줘요 ✏️ (12자까지)', S.name) || '').trim().slice(0, 12);
+  if (!n || n === S.name) return;
+  S.name = n; save(); render();
+  toast(`이제 ${n} 작가님이에요! ✨`);
+}
 function renderHeader(){
   if (!S.name){ $('hdRight').innerHTML = ''; $('xpWrap').style.display = 'none'; return; }
   const l = level();
-  $('hdRight').innerHTML = `<span class="pill lv">${l.name}</span><span class="pill">⭐ ${S.xp}</span>`;
+  $('hdRight').innerHTML = `<button class="pill pill-name" onclick="renameAuthor()" title="눌러서 작가 이름 바꾸기">✏️ ${esc(S.name)}</button><span class="pill lv">${l.name}</span><span class="pill">⭐ ${S.xp}</span>`;
   $('xpWrap').style.display = 'block';
   const pct = l.next ? ((S.xp - l.xp) / (l.next.xp - l.xp)) * 100 : 100;
   $('xpFill').style.width = Math.min(100, pct) + '%';
