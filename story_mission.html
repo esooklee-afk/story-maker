@@ -139,6 +139,13 @@ textarea.paste{width:100%;border:2px dashed var(--border);border-radius:var(--r-
 .cam b{display:block;font-size:24px}
 .cam.sel{border-color:var(--purple);background:var(--purple-light);color:var(--purple-dark);font-weight:700}
 .moods{display:flex;gap:6px;flex-wrap:wrap}
+.pick-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.pick{background:var(--white);border:1.5px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;color:var(--ink)}
+.pick:hover{border-color:var(--purple)}
+.pick.sel{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:700}
+.paste-zone{border:2.5px dashed #B8A9F5;border-radius:var(--r-sm);background:#FAF8FF;padding:14px;text-align:center;font-size:13px;color:var(--purple-dark);margin-top:8px;line-height:1.6}
+.paste-zone.drag{background:var(--purple-light);border-color:var(--purple)}
+.paste-zone .btn{margin-top:8px}
 .mood{border:2px solid transparent;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
 .mood.sel{border-color:var(--ink)}
 .draw-tabs{display:flex;gap:6px;margin-bottom:8px}
@@ -468,6 +475,14 @@ const CAMERAS = [
   { v:'가까이 얼굴', e:'😮', d:'표정이 잘 보여요' },
   { v:'위에서 내려다보기', e:'🦅', d:'새처럼 봐요' },
 ];
+// 컷(기승전결)마다 어울리는 대사 보기 — {h}는 주인공 이름
+const LINE_PICKS = [
+  ['안녕! 나는 {h}야!', '여기가 내가 사는 곳이야', '오늘은 특별한 일이 생길 것 같아!', '와, 날씨 정말 좋다~'],
+  ['어? 이게 뭐지?', '큰일 났다!', '어떡하지… 조금 무서워', '내가 해결해 볼게!'],
+  ['포기하지 않을 거야!', '좋은 생각이 났어!', '우리 같이 힘을 합치자!', '한 번만 더 해 보자!'],
+  ['해냈다!', '고마워, 친구야!', '정말 행복해!', '다음엔 또 어떤 일이 생길까?'],
+];
+const SOUND_PICKS = ['바스락바스락','쿵!','휘이잉~','두근두근','짹짹','쨍그랑!','와르르','첨벙','우르릉 쾅!','반짝반짝','타닥타닥','하하호호'];
 const MOODS = [
   { v:'밝고 신나는', bg:'#FFF3D0', fg:'#854F0B', e:'☀️' },
   { v:'무섭고 어두운', bg:'#E3E1F0', fg:'#3C3489', e:'🌑' },
@@ -1107,10 +1122,12 @@ function renderBoard(){
         <div class="cam-grid">${CAMERAS.map(x => `<button class="cam ${b.camera===x.v?'sel':''}" onclick="setB('camera','${x.v}')"><b>${x.e}</b>${x.v}<br><span style="font-size:10px;color:var(--ink-soft)">${x.d}</span></button>`).join('')}</div></div>
 
       <div class="bq"><div class="q">💬 2. 이 장면에서 ${esc(hero)}${hasBatchim(hero)?'이':'가'} 뭐라고 말할까?</div>
-        <input id="bLine" value="${esc(b.line)}" placeholder="예) &quot;여기가 어디지? 조금 무서워...&quot;" oninput="setB('line',this.value,true)"></div>
+        <div class="pick-row" id="linePicks">${LINE_PICKS[c].map(x => { const t = x.replace('{h}', hero); return `<button class="pick ${b.line===t?'sel':''}" data-v="${esc(t)}" onclick="pickLine(this)">${esc(t)}</button>`; }).join('')}</div>
+        <input id="bLine" value="${esc(b.line)}" placeholder="보기를 고르거나 직접 써요" oninput="setB('line',this.value,true);markPicks()"></div>
 
       <div class="bq"><div class="q">🔊 3. 어떤 소리가 들릴까? (효과음)</div>
-        <input id="bSound" value="${esc(b.sound)}" placeholder="예) 바스락바스락, 쿵!, 휘이잉~" oninput="setB('sound',this.value,true)"></div>
+        <div class="pick-row" id="soundPicks">${SOUND_PICKS.map(x => `<button class="pick ${b.sound.split(', ').includes(x)?'sel':''}" data-v="${esc(x)}" onclick="pickSound(this)">${esc(x)}</button>`).join('')}</div>
+        <input id="bSound" value="${esc(b.sound)}" placeholder="여러 개 골라도 돼요! 직접 써도 좋아요" oninput="setB('sound',this.value,true);markPicks()"></div>
 
       <div class="bq"><div class="q">🎨 4. 장면의 분위기는?</div>
         <div class="moods">${MOODS.map(x => `<button class="mood ${b.mood===x.v?'sel':''}" style="background:${x.bg};color:${x.fg}" onclick="setB('mood','${x.v}')">${x.e} ${x.v}</button>`).join('')}</div></div>
@@ -1131,6 +1148,18 @@ function renderBoard(){
       </div>
     </div>`;
   renderDrawArea();
+}
+// 대사는 하나만, 효과음은 여러 개 고를 수 있어요 (고른 뒤 칸에서 고쳐 써도 돼요)
+function pickLine(el){ const v = el.dataset.v; $('bLine').value = v; setB('line', v, true); markPicks(); }
+function pickSound(el){
+  const cur = $('bSound').value.split(',').map(x => x.trim()).filter(Boolean), v = el.dataset.v;
+  const next = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v];
+  $('bSound').value = next.join(', '); setB('sound', next.join(', '), true); markPicks();
+}
+function markPicks(){
+  const line = $('bLine').value, snd = $('bSound').value.split(',').map(x => x.trim());
+  document.querySelectorAll('#linePicks .pick').forEach(el => el.classList.toggle('sel', el.dataset.v === line));
+  document.querySelectorAll('#soundPicks .pick').forEach(el => el.classList.toggle('sel', snd.includes(el.dataset.v)));
 }
 function cutDone(n){ const b = S.board[n]; return !!(b.camera && b.line.trim() && b.mood); }
 function setB(key, val, quiet){
@@ -1196,12 +1225,37 @@ function renderDrawArea(){
     const st = imgStyle();
     area.innerHTML = `<div class="lbl">🎨 그림 스타일 고르기 <span style="font-weight:400;color:var(--ink-soft)">(4컷 모두 같은 스타일 · 16:9 가로 그림)</span></div>
       <div class="style-grid">${IMG_STYLES.map(x => `<button class="style-card ${x.id === st.id ? 'sel' : ''}" onclick="pickStyle('${x.id}')"><b>${x.icon} ${x.name}</b>${x.d}</button>`).join('')}</div>
-      <div class="tip" style="margin-bottom:8px">① 아래 버튼을 누르면 그림 주문서가 나와요. <b>Gemini</b>나 <b>ChatGPT</b>를 골라 붙여넣어요.<br>② 그림이 나오면 <b>다운로드</b>해요.<br>③ 여기로 돌아와 <b>📷 사진 올리기</b>로 그림을 넣어요! (16:9로 자동 맞춤)</div>
-      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 다운로드해서 📷 사진 올리기로 넣어요. 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!')">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
+      <div class="tip" style="margin-bottom:8px">① 아래 버튼을 누르면 그림 주문서가 나와요. <b>Gemini</b>나 <b>ChatGPT</b>를 골라 붙여넣어요.<br>② 그림이 나오면 <b>오른쪽 클릭 → 이미지 복사</b>해요. (휴대폰은 길게 눌러 복사)<br>③ 여기로 돌아와 <b>Ctrl+V</b>로 바로 붙여요! 16:9로 맞춰지고 다음 컷으로 넘어가요 ➡️</div>
+      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 오른쪽 클릭 → 이미지 복사 → 이 페이지에서 Ctrl+V! 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!')">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
+      ${pasteZone()}
       ${saved}`;
   } else {
-    area.innerHTML = `<label class="btn btn-blue" style="display:block;text-align:center">📷 그림 파일 고르기<input type="file" accept="image/*" style="display:none" onchange="uploadImg(this)"></label>${saved}`;
+    area.innerHTML = `<label class="btn btn-blue" style="display:block;text-align:center">📷 그림 파일 고르기<input type="file" accept="image/*" style="display:none" onchange="uploadImg(this)"></label>${pasteZone()}${saved}`;
   }
+  const z = $('pasteZone'); if (!z) return;
+  z.ondragover = e => { e.preventDefault(); z.classList.add('drag'); };
+  z.ondragleave = () => z.classList.remove('drag');
+  z.ondrop = e => { e.preventDefault(); z.classList.remove('drag'); const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/')); if (f) readImgFile(f); };
+}
+const pasteZone = () => `<div class="paste-zone" id="pasteZone">📋 복사한 그림을 <b>Ctrl+V</b>(맥은 Cmd+V)로 바로 붙여요<br>그림 파일을 여기로 끌어다 놓아도 돼요
+  <button class="btn btn-ghost" onclick="pasteFromClipboard()">📋 붙여넣기 버튼</button></div>`;
+function readImgFile(f){ const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 640, storeImg); rd.readAsDataURL(f); }
+function onBoard(){ const m = MISSIONS[view.mission]; return view.screen === 'mission' && m && m.type === 'board'; }
+// 어디서든 Ctrl+V 하면 지금 컷에 그림이 붙어요
+document.addEventListener('paste', e => {
+  if (!onBoard()) return;
+  const item = [...(e.clipboardData ? e.clipboardData.items : [])].find(x => x.type.startsWith('image/'));
+  if (!item) return;
+  e.preventDefault(); readImgFile(item.getAsFile());
+});
+async function pasteFromClipboard(){
+  try{
+    for (const it of await navigator.clipboard.read()){
+      const t = it.types.find(x => x.startsWith('image/'));
+      if (t) return readImgFile(await it.getType(t));
+    }
+    toast('복사된 그림이 없어요. 그림에서 오른쪽 클릭 → 이미지 복사를 먼저 해요 🖼️');
+  }catch(e){ toast('키보드로 Ctrl+V(맥은 Cmd+V)를 눌러 붙여 봐요 📋'); }
 }
 function shrinkTo(src, maxW, cb){
   const im = new Image();
@@ -1222,10 +1276,14 @@ function storeImg(data){
   S.board[view.cut].img = data; save();
   if (!had){ addXP(10); toast(`${view.cut+1}컷 그림 완성! ⭐ +10`); } else toast('그림을 바꿨어요!');
   renderDrawArea();
+  // 그림을 넣으면 다음 컷으로 넘어가요 (카메라·대사·분위기가 비어 있으면 먼저 채우게 알려 줘요)
+  const c = view.cut;
+  if (!cutDone(c)){ setTimeout(() => toast('그림 완성! 카메라 · 대사 · 분위기도 골라야 다음 컷으로 갈 수 있어요 🎬'), 1200); return; }
+  setTimeout(() => { if (onBoard() && view.cut === c){ if (c < 3){ toast(`${c+2}컷으로 이동해요! ➡️`); go('mission', { cut:c+1 }); } else toast('4컷 그림 완성! 🎬 스토리보드 완성 버튼을 눌러요'); } }, 1000);
 }
 function uploadImg(inp){
   const f = inp.files[0]; if (!f) return;
-  const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 640, storeImg); rd.readAsDataURL(f);
+  readImgFile(f);
 }
 
 // --- 그림판 ---
