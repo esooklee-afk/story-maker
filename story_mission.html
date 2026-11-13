@@ -43,6 +43,8 @@ main{max-width:720px;margin:18px auto;padding:0 16px}
 .btn-coral{background:var(--coral);color:#fff}
 .btn-ghost{background:var(--white);color:var(--ink-soft);border:1.5px solid var(--border)}
 .btn-gemini{background:linear-gradient(135deg,#4285F4,#9B72CB,#D96570);color:#fff}
+.btn-gpt{background:#10A37F;color:#fff}
+.ai-prompt{width:100%;height:140px;border:1.5px solid var(--border);border-radius:10px;padding:8px;font-size:12px;line-height:1.6;margin-bottom:8px;resize:vertical}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px}
 .lbl{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
@@ -100,6 +102,12 @@ main{max-width:720px;margin:18px auto;padding:0 16px}
 .chip{background:var(--white);border:1.5px solid var(--purple);color:var(--purple-dark);border-radius:99px;padding:7px 13px;font-size:13px;font-weight:500}
 .chip:hover{background:var(--purple-light)}
 .chip.sel{background:var(--purple);color:#fff}
+.chips.boxes{flex-direction:column;gap:6px}
+.cbox{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none}
+.cbox:hover{border-color:var(--purple)}
+.cbox input{width:20px;height:20px;accent-color:var(--purple);flex-shrink:0;cursor:pointer}
+.cbox:has(input:checked){background:var(--purple-light);border-color:var(--purple);color:var(--purple-dark);font-weight:700}
+.cbox-hint{font-size:12px;color:var(--ink-soft);margin:2px 2px 0}
 .inrow{display:flex;gap:8px}
 .inrow textarea{flex:1;padding:12px 14px;border-radius:var(--r-sm);border:2px solid var(--border);font-size:15px;resize:none;line-height:1.5}
 .inrow textarea:focus{outline:none;border-color:var(--purple)}
@@ -131,6 +139,17 @@ textarea.paste{width:100%;border:2px dashed var(--border);border-radius:var(--r-
 .cam b{display:block;font-size:24px}
 .cam.sel{border-color:var(--purple);background:var(--purple-light);color:var(--purple-dark);font-weight:700}
 .moods{display:flex;gap:6px;flex-wrap:wrap}
+.pick-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.pick{background:var(--white);border:1.5px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;color:var(--ink)}
+.pick:hover{border-color:var(--purple)}
+.pick.sel{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:700}
+.paste-zone{border:2.5px dashed #B8A9F5;border-radius:var(--r-sm);background:#FAF8FF;padding:14px;text-align:center;font-size:13px;color:var(--purple-dark);margin-top:8px;line-height:1.6}
+.paste-zone.drag{background:var(--purple-light);border-color:var(--purple)}
+.paste-zone .btn{margin-top:8px}
+.room-box{background:#F3F8FF;border:1.5px solid #BFD6FF;border-radius:var(--r-sm);padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:8px;color:var(--ink)}
+.room-box input{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;margin-top:4px}
+.room-on{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0;font-weight:700;color:#1a56c4}
+.room-on .back{padding:3px 10px;font-size:11px;margin-left:auto}
 .mood{border:2px solid transparent;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
 .mood.sel{border-color:var(--ink)}
 .draw-tabs{display:flex;gap:6px;margin-bottom:8px}
@@ -143,12 +162,17 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .pal .c.sel{box-shadow:0 0 0 2.5px var(--ink)}
 .pal .tool{padding:6px 10px;border-radius:99px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:700}
 .pal .tool.sel{background:var(--ink);color:#fff}
-.preview-img{width:100%;border-radius:var(--r-sm);border:2px solid var(--border);display:block}
+.preview-img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);border:2px solid var(--border);display:block}
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:6px 0 10px}
+.style-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r-sm);padding:8px;text-align:left;font-size:12px;line-height:1.4;color:var(--ink-soft)}
+.style-card b{display:block;font-size:13px;color:var(--ink)}
+.style-card.sel{border-color:var(--purple);background:var(--purple-light)}
+.style-card.sel b{color:var(--purple-dark)}
 
 /* 완성 스토리보드 */
 .sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sb{border:2px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff}
-.sb .frame{aspect-ratio:3/2;background:#F6F7FB;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.sb .frame{aspect-ratio:16/9;background:#F6F7FB;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
 .sb .frame img{width:100%;height:100%;object-fit:cover}
 .sb .num{position:absolute;top:6px;left:6px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px}
 .sb .info{padding:10px;font-size:12px;line-height:1.6;border-top:2px solid var(--ink)}
@@ -455,6 +479,14 @@ const CAMERAS = [
   { v:'가까이 얼굴', e:'😮', d:'표정이 잘 보여요' },
   { v:'위에서 내려다보기', e:'🦅', d:'새처럼 봐요' },
 ];
+// 컷(기승전결)마다 어울리는 대사 보기 — {h}는 주인공 이름
+const LINE_PICKS = [
+  ['안녕! 나는 {h}야!', '여기가 내가 사는 곳이야', '오늘은 특별한 일이 생길 것 같아!', '와, 날씨 정말 좋다~'],
+  ['어? 이게 뭐지?', '큰일 났다!', '어떡하지… 조금 무서워', '내가 해결해 볼게!'],
+  ['포기하지 않을 거야!', '좋은 생각이 났어!', '우리 같이 힘을 합치자!', '한 번만 더 해 보자!'],
+  ['해냈다!', '고마워, 친구야!', '정말 행복해!', '다음엔 또 어떤 일이 생길까?'],
+];
+const SOUND_PICKS = ['바스락바스락','쿵!','휘이잉~','두근두근','짹짹','쨍그랑!','와르르','첨벙','우르릉 쾅!','반짝반짝','타닥타닥','하하호호'];
 const MOODS = [
   { v:'밝고 신나는', bg:'#FFF3D0', fg:'#854F0B', e:'☀️' },
   { v:'무섭고 어두운', bg:'#E3E1F0', fg:'#3C3489', e:'🌑' },
@@ -475,17 +507,38 @@ function load(){ try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)); if (
 
 // ===== 중간 저장 파일 =====
 // 브라우저에는 답할 때마다 자동 저장되지만, 다른 컴퓨터에서 이어 하려면 파일로 내려받아 가져가요
-function exportSave(){
+async function exportSave(){
   const d = new Date(), day = `${d.getMonth()+1}월${d.getDate()}일`;
+  const name = `이야기탐험대_${S.name}_${day}.json`;
   const blob = new Blob([JSON.stringify({ app:'story_mission', v:1, S })], { type:'application/json' });
+  const done = (where) => showModal('💾', '중간 저장 완료!', `<b>${esc(name)}</b> 파일이 ${where}에 저장됐어요.<br><br>다음에 <b>📂 불러오기</b>로 이 파일을 고르면<br>이어서 만들 수 있어요!`, '좋아요');
+  // 크롬·엣지: 다운로드 폴더에서 열리는 저장 창을 띄워 위치를 고를 수 있어요
+  if (window.showSaveFilePicker){
+    try{
+      const h = await showSaveFilePicker({ suggestedName:name, startIn:'downloads', id:'story_mission',
+        types:[{ description:'이야기 탐험대 저장 파일', accept:{ 'application/json':['.json'] } }] });
+      const w = await h.createWritable(); await w.write(blob); await w.close();
+      return done('고른 폴더');
+    }catch(e){ if (e.name === 'AbortError') return; } // 취소하면 그만, 다른 오류면 아래 방식으로
+  }
+  // 그 밖의 브라우저: 기본 다운로드 폴더로 바로 내려받아요
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `이야기탐험대_${S.name}_${day}.json`;
+  a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  showModal('💾', '중간 저장 완료!', `<b>${esc(a.download)}</b> 파일이 다운로드 폴더에 저장됐어요.<br><br>다음에 <b>📂 불러오기</b>로 이 파일을 고르면<br>이어서 만들 수 있어요!`, '좋아요');
+  done('다운로드 폴더');
 }
-function pickSaveFile(){ $('loadFile').click(); }
+async function pickSaveFile(){
+  // 불러오기 창도 다운로드 폴더(또는 지난번 저장한 폴더)에서 열려요
+  if (window.showOpenFilePicker){
+    try{
+      const [h] = await showOpenFilePicker({ startIn:'downloads', id:'story_mission',
+        types:[{ description:'이야기 탐험대 저장 파일', accept:{ 'application/json':['.json'] } }] });
+      return importSave({ files:[await h.getFile()], value:'' });
+    }catch(e){ if (e.name === 'AbortError') return; }
+  }
+  $('loadFile').click();
+}
 function importSave(input){
   const f = input.files[0]; input.value = '';
   if (!f) return;
@@ -565,31 +618,58 @@ function fallbackCopy(text){
   ta.select(); try{ document.execCommand('copy'); }catch(e){} ta.remove();
 }
 
-// ===== Gemini 연결 (내 구글 계정으로 Gemini 사이트 열기) =====
-function openGemini(prompt, msg){
-  copyText(prompt);
-  const url = 'https://gemini.google.com/?q=' + encodeURIComponent(prompt);
-  let w = null;
-  try { w = window.open(url, '_blank'); } catch(e){}
-  // 브라우저가 새 창을 막으면, 직접 누를 수 있는 링크와 질문을 보여 줘요
-  if (!w){ showGeminiBox(url, prompt); return; }
-  toast(msg || 'Gemini가 열렸어요! 질문이 안 보이면 입력칸에 붙여넣기(Ctrl+V / 길게 눌러 붙여넣기) 해요 📋');
+// ===== AI 연결 (Gemini / ChatGPT) =====
+// Gemini는 주소로 질문을 넣어 주지 않아서, 질문(프롬프트)을 먼저 보여 주고 복사한 뒤 AI를 열어요
+const AI_SITES = [
+  { id:'gemini',  name:'Gemini',  icon:'🔷', cls:'btn-gemini', url:p => 'https://gemini.google.com/app' },
+  { id:'chatgpt', name:'ChatGPT', icon:'🟢', cls:'btn-gpt',    url:p => 'https://chatgpt.com/?q=' + encodeURIComponent(p) },
+];
+// ===== 그림 채팅방 이어 쓰기 =====
+// 4컷 그림을 한 채팅방에서 그리면 AI가 앞 그림을 기억해서 주인공과 스타일이 똑같이 이어져요
+const ROOM_RE = { gemini:/^https:\/\/gemini\.google\.com\/(u\/\d+\/)?app\/[\w-]+/, chatgpt:/^https:\/\/chatgpt\.com\/(g\/[\w-]+\/)?c\/[\w-]+/ };
+const rooms = () => (S.rooms = S.rooms || {});
+function setRoom(url){
+  url = (url || '').trim();
+  const id = Object.keys(ROOM_RE).find(k => ROOM_RE[k].test(url));
+  if (!id){ if (url) toast('채팅방 주소가 아니에요. 주소창의 주소를 통째로 복사해 붙여요 🔗'); return; }
+  rooms()[id] = url.split(/[?#]/)[0]; save(); renderDrawArea();
+  toast(`✅ ${id === 'gemini' ? 'Gemini' : 'ChatGPT'} 그림 채팅방을 저장했어요! 다음 컷도 이 방에서 그려요`);
 }
-function showGeminiBox(url, prompt){
+function clearRoom(id){ delete rooms()[id]; save(); renderDrawArea(); toast('다음 그림은 새 채팅방에서 시작해요 🆕'); }
+// 이름 붙인 탭을 다시 쓰면 이미 열린 AI 탭으로 돌아가요. 탭이 없으면 저장한 방 주소를 새로 열어요
+function openRoom(id, href){
+  const w = window.open('', 'story_' + id);
+  if (!w){ location.href = href; return; }
+  let blank = false;
+  try{ blank = w.location.href === 'about:blank'; }catch(e){}   // 다른 사이트가 열려 있으면 읽을 수 없어요 → 이미 열린 AI 탭
+  if (blank) w.location.href = href;
+  try{ w.focus(); }catch(e){}
+}
+function openGemini(prompt, msg, room){
+  copyText(prompt);
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   bg.innerHTML = `<div class="modal" style="text-align:left">
-    <div style="text-align:center;font-size:44px">🔷</div>
-    <h3 class="fun" style="text-align:center;font-size:26px">Gemini를 열어요</h3>
-    <p style="margin-bottom:10px">새 창이 자동으로 안 열렸어요.<br>① 아래 <b>Gemini 열기</b>를 눌러요.<br>② 입력칸이 비어 있으면 <b>붙여넣기</b>(Cmd+V) 해요. 질문은 이미 복사해 뒀어요!</p>
-    <a class="btn btn-gemini" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px" href="${url}" target="_blank" rel="noopener">🔷 Gemini 열기</a>
-    <textarea readonly style="width:100%;height:110px;border:1.5px solid var(--border);border-radius:10px;padding:8px;font-size:12px;line-height:1.6;margin-bottom:8px">${esc(prompt)}</textarea>
-    <div class="row">
-      <button class="btn btn-ghost" data-act="copy">📋 질문 다시 복사</button>
-      <button class="btn btn-purple" data-act="close">닫기</button>
-    </div></div>`;
-  bg.querySelector('[data-act=copy]').onclick = () => copyText(prompt).then(() => toast('질문을 복사했어요! Gemini 입력칸에 붙여넣어요 📋'));
+    <div style="text-align:center;font-size:40px">🤖</div>
+    <h3 class="fun" style="text-align:center;font-size:24px">AI에게 보낼 질문이에요</h3>
+    <p style="margin-bottom:8px">① 아래 질문은 <b>이미 복사</b>됐어요. (안 되면 📋 복사 버튼)<br>
+    ② 쓰고 싶은 AI 버튼을 눌러요.<br>
+    ③ 입력칸에 <b>붙여넣기</b>(Ctrl+V / Cmd+V) 하고 보내요!</p>
+    <textarea readonly class="ai-prompt">${esc(prompt)}</textarea>
+    <button class="btn btn-ghost" data-act="copy" style="margin-bottom:8px">📋 질문 복사하기</button>
+    <div class="row">${AI_SITES.map(a => { const r = room && rooms()[a.id];
+      return `<a class="btn ${a.cls}" data-ai="${a.id}" data-room="${r ? 1 : ''}" style="text-align:center;text-decoration:none" href="${esc(r || a.url(prompt))}" target="_blank" rel="noopener">${a.icon} ${a.name} ${r ? '같은 방 열기' : '열기'}</a>`; }).join('')}</div>
+    ${msg ? `<div class="tip" style="margin:10px 0 8px">💡 ${esc(msg)}</div>` : ''}
+    <button class="btn btn-purple" data-act="close" style="margin-top:4px">닫기</button></div>`;
+  const ta = bg.querySelector('.ai-prompt');
+  ta.onclick = () => ta.select();
+  bg.querySelector('[data-act=copy]').onclick = () => copyText(prompt).then(() => { ta.select(); toast('질문을 복사했어요! AI 입력칸에 붙여넣어요 📋'); });
+  // 링크를 누르는 순간 한 번 더 복사해서, 새 창에서 바로 붙여넣을 수 있게 해요
+  bg.querySelectorAll('[data-ai]').forEach(el => el.addEventListener('click', e => {
+    copyText(prompt);
+    if (room){ e.preventDefault(); openRoom(el.dataset.ai, el.href); }
+    toast(el.dataset.room ? '같은 채팅방으로 가요! 입력칸에 붙여넣기 해요 📋' : 'AI가 열려요! 입력칸에 붙여넣기 해요 📋');
+  }));
   bg.querySelector('[data-act=close]').onclick = () => bg.remove();
-  bg.querySelector('a').addEventListener('click', () => setTimeout(() => bg.remove(), 300));
   document.body.appendChild(bg);
 }
 function getQ(mi, n){ return MISSIONS[mi].qs[n]; }
@@ -889,8 +969,18 @@ function askQ(){
   const m = MISSIONS[view.mission], q = getQ(view.mission, view.q);
   view.follow = false;
   bubble(fill(q.q), 'ai');
-  $('chipBox').innerHTML = q.chips.map(c => `<button class="chip" onclick="pickChip(this)">${esc(fill(c))}</button>`).join('');
-  const ta = $('ans'); ta.value = S.a[q.k] || ''; ta.placeholder = '내 생각을 써 봐요 (위의 보기를 눌러도 돼요)'; ta.focus();
+  // 보기는 체크박스예요. 여러 개 고르면 답 칸에 쉼표로 합쳐져요
+  const prev = S.a[q.k] || '', box = $('chipBox');
+  box.className = 'chips boxes';
+  box.innerHTML = q.chips.map(c => { const t = fill(c);
+    return `<label class="cbox"><input type="checkbox" value="${esc(t)}" onchange="pickBoxes()"${prev.split(', ').includes(t) ? ' checked' : ''}>${esc(t)}</label>`; }).join('')
+    + '<div class="cbox-hint">☑ 여러 개 골라도 돼요! 고른 뒤 답 칸에서 고쳐 써도 좋아요</div>';
+  const ta = $('ans'); ta.value = prev; ta.placeholder = '내 생각을 써 봐요 (위의 보기를 골라도 돼요)'; ta.focus();
+}
+function pickBoxes(){
+  const ta = $('ans');
+  ta.value = [...document.querySelectorAll('#chipBox input:checked')].map(x => x.value).join(', ');
+  ta.focus();
 }
 function pickChip(el){ const ta = $('ans'); ta.value = el.textContent; ta.focus(); }
 
@@ -921,6 +1011,7 @@ function followText(q){ return `[${FOLLOW[q.k].t}] ` + fill(FOLLOW[q.k].q); }
 function askFollow(q){
   view.follow = true; view.fcount = (view.fcount || 0) + 1;
   bubble(followText(q), 'think');
+  $('chipBox').className = 'chips';
   $('chipBox').innerHTML = `<button class="chip" onclick="pickChip(this)">${SKIP}</button>`
     + ['왜냐하면 ','만약에 ','내 생각에는 '].map(s => `<button class="chip starter" onclick="startWith(this)">${s}…</button>`).join('');
   const ta = $('ans'); ta.value = S.a[q.k + '_why'] || ''; ta.placeholder = '정답은 없어! 떠오르는 대로 써 봐요 🧠'; ta.focus();
@@ -975,10 +1066,10 @@ function renderWrite(){
       <div class="lbl">📝 지금까지 내가 만든 이야기 재료</div>
       <div class="sum">${esc(storySoFar())}</div>
       <div class="tip">🧚 이제 이 재료로 <b>기·승·전·결 4컷 이야기</b>를 만들어요!<br>
-      ① 아래 버튼을 누르면 <b>내 구글 계정의 Gemini</b>가 열려요.<br>
-      ② Gemini가 써 준 이야기를 전부 복사해서 아래 칸에 붙여넣어요.<br>
+      ① 아래 버튼을 누르면 <b>AI에게 보낼 질문</b>이 나와요. Gemini나 ChatGPT를 골라 붙여넣어요.<br>
+      ② AI가 써 준 이야기를 전부 복사해서 아래 칸에 붙여넣어요.<br>
       ③ 4컷으로 나눈 다음, 내 마음에 들게 고쳐 써요! (고쳐 쓰면 ⭐ 보너스)</div>
-      <button class="btn btn-gemini" onclick="writeWithGemini()">🔷 Gemini로 4컷 이야기 만들기</button>
+      <button class="btn btn-gemini" onclick="writeWithGemini()">🤖 AI로 4컷 이야기 만들기 (Gemini · ChatGPT)</button>
       <textarea class="paste" id="paste" rows="6" placeholder="[1컷] 기 — 시작&#10;콩이는 깊은 숲속에 살고 있었어요...&#10;[2컷] 승 — 사건&#10;..."></textarea>
       <div class="row">
         <button class="btn btn-teal" onclick="splitScenes()">✂️ 4컷으로 나누기</button>
@@ -1020,7 +1111,7 @@ ${storySoFar()}
 (내용)
 [4컷] 결 — 결말
 (내용)`;
-  openGemini(prompt, 'Gemini가 열렸어요! 답이 나오면 전부 복사해서 아래 칸에 붙여넣어요 📋');
+  openGemini(prompt, 'AI가 4컷 이야기를 써 주면, 답을 전부 복사해서 이 페이지의 아래 칸에 붙여넣어요 📋');
 }
 function splitScenes(){
   const raw = $('paste').value.replace(/\*\*/g, '').replace(/#+\s*/g, '');
@@ -1061,10 +1152,12 @@ function renderBoard(){
         <div class="cam-grid">${CAMERAS.map(x => `<button class="cam ${b.camera===x.v?'sel':''}" onclick="setB('camera','${x.v}')"><b>${x.e}</b>${x.v}<br><span style="font-size:10px;color:var(--ink-soft)">${x.d}</span></button>`).join('')}</div></div>
 
       <div class="bq"><div class="q">💬 2. 이 장면에서 ${esc(hero)}${hasBatchim(hero)?'이':'가'} 뭐라고 말할까?</div>
-        <input id="bLine" value="${esc(b.line)}" placeholder="예) &quot;여기가 어디지? 조금 무서워...&quot;" oninput="setB('line',this.value,true)"></div>
+        <div class="pick-row" id="linePicks">${LINE_PICKS[c].map(x => { const t = x.replace('{h}', hero); return `<button class="pick ${b.line===t?'sel':''}" data-v="${esc(t)}" onclick="pickLine(this)">${esc(t)}</button>`; }).join('')}</div>
+        <input id="bLine" value="${esc(b.line)}" placeholder="보기를 고르거나 직접 써요" oninput="setB('line',this.value,true);markPicks()"></div>
 
       <div class="bq"><div class="q">🔊 3. 어떤 소리가 들릴까? (효과음)</div>
-        <input id="bSound" value="${esc(b.sound)}" placeholder="예) 바스락바스락, 쿵!, 휘이잉~" oninput="setB('sound',this.value,true)"></div>
+        <div class="pick-row" id="soundPicks">${SOUND_PICKS.map(x => `<button class="pick ${b.sound.split(', ').includes(x)?'sel':''}" data-v="${esc(x)}" onclick="pickSound(this)">${esc(x)}</button>`).join('')}</div>
+        <input id="bSound" value="${esc(b.sound)}" placeholder="여러 개 골라도 돼요! 직접 써도 좋아요" oninput="setB('sound',this.value,true);markPicks()"></div>
 
       <div class="bq"><div class="q">🎨 4. 장면의 분위기는?</div>
         <div class="moods">${MOODS.map(x => `<button class="mood ${b.mood===x.v?'sel':''}" style="background:${x.bg};color:${x.fg}" onclick="setB('mood','${x.v}')">${x.e} ${x.v}</button>`).join('')}</div></div>
@@ -1072,7 +1165,7 @@ function renderBoard(){
       <div class="bq"><div class="q">🖼️ 5. 장면 그림을 만들어요</div>
         <div class="draw-tabs">
           <button class="${view.drawMode==='draw'?'on':''}" onclick="setDraw('draw')">✏️ 직접 그리기</button>
-          <button class="${view.drawMode==='gemini'?'on':''}" onclick="setDraw('gemini')">🔷 Gemini 그림</button>
+          <button class="${view.drawMode==='gemini'?'on':''}" onclick="setDraw('gemini')">🤖 AI 그림</button>
           <button class="${view.drawMode==='upload'?'on':''}" onclick="setDraw('upload')">📷 사진 올리기</button>
         </div>
         <div id="drawArea"></div>
@@ -1085,6 +1178,18 @@ function renderBoard(){
       </div>
     </div>`;
   renderDrawArea();
+}
+// 대사는 하나만, 효과음은 여러 개 고를 수 있어요 (고른 뒤 칸에서 고쳐 써도 돼요)
+function pickLine(el){ const v = el.dataset.v; $('bLine').value = v; setB('line', v, true); markPicks(); }
+function pickSound(el){
+  const cur = $('bSound').value.split(',').map(x => x.trim()).filter(Boolean), v = el.dataset.v;
+  const next = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v];
+  $('bSound').value = next.join(', '); setB('sound', next.join(', '), true); markPicks();
+}
+function markPicks(){
+  const line = $('bLine').value, snd = $('bSound').value.split(',').map(x => x.trim());
+  document.querySelectorAll('#linePicks .pick').forEach(el => el.classList.toggle('sel', el.dataset.v === line));
+  document.querySelectorAll('#soundPicks .pick').forEach(el => el.classList.toggle('sel', snd.includes(el.dataset.v)));
 }
 function cutDone(n){ const b = S.board[n]; return !!(b.camera && b.line.trim() && b.mood); }
 function setB(key, val, quiet){
@@ -1110,22 +1215,36 @@ function finishBoard(){
 }
 function setDraw(mode){ view.drawMode = mode; document.querySelectorAll('.draw-tabs button').forEach((b,n) => b.classList.toggle('on', ['draw','gemini','upload'][n] === mode)); renderDrawArea(); }
 
+// 그림 스타일은 4컷 모두 똑같이 써서 그림책 느낌이 이어지게 해요
+const IMG_STYLES = [
+  { id:'watercolor', icon:'🎨', name:'수채화 그림책', d:'부드럽고 따뜻한 느낌', p:'부드러운 수채화 물감으로 그린 따뜻한 어린이 그림책 일러스트' },
+  { id:'crayon',     icon:'🖍️', name:'크레파스',     d:'아이가 그린 듯 정겨운', p:'크레파스로 꾹꾹 눌러 그린 듯한 정겨운 손그림 (질감이 보이게)' },
+  { id:'pencil',     icon:'✏️', name:'색연필',       d:'포근하고 섬세한',     p:'색연필로 섬세하게 칠한 포근한 동화책 일러스트' },
+  { id:'3d',         icon:'🧸', name:'3D 애니메이션', d:'말랑말랑 입체 캐릭터', p:'둥글고 귀여운 3D 애니메이션 영화 느낌의 장면 (부드러운 조명)' },
+  { id:'cartoon',    icon:'💥', name:'만화·웹툰',    d:'선명하고 신나는',     p:'굵은 선과 선명한 색의 밝은 어린이 만화(웹툰) 스타일' },
+  { id:'paper',      icon:'✂️', name:'종이 오리기',  d:'색종이를 붙인 듯',    p:'색종이를 오려 겹겹이 붙인 페이퍼 컷아웃 콜라주 스타일' },
+  { id:'pixel',      icon:'👾', name:'픽셀 아트',    d:'게임 속 장면처럼',    p:'알록달록한 레트로 게임 느낌의 픽셀 아트' },
+  { id:'ink',        icon:'🖌️', name:'옛 그림(수묵)', d:'전래동화에 딱',       p:'은은한 먹과 담채로 그린 한국 전통 민화·수묵화 느낌의 그림' },
+];
+const imgStyle = () => IMG_STYLES.find(x => x.id === S.imgStyle) || IMG_STYLES[0];
+function pickStyle(id){ S.imgStyle = id; save(); renderDrawArea(); toast(`${imgStyle().icon} ${imgStyle().name} 스타일로 그려요! (4컷 모두 같은 스타일)`); }
 function imgPrompt(c){
   const b = S.board[c], a = S.a;
-  return `어린이 그림책 스타일로 따뜻하고 귀여운 그림 1장을 그려줘. 그림 안에 글자는 넣지 마.${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
+  return `이 장면을 그림 1장으로 그려줘. 그림 안에 글자는 넣지 마.
+그림 스타일: ${imgStyle().p} (4컷 모두 같은 스타일과 같은 주인공 모습을 유지해줘)
+그림 크기: 가로로 긴 16:9 비율 (예: 1920×1080). 꼭 가로 16:9로 그려줘.${c > 0 ? `\n이건 ${c+1}번째 컷이야. 이 채팅방에서 앞에 그린 그림과 같은 주인공 얼굴·옷·색깔, 같은 그림 스타일로 이어서 그려줘.` : ''}${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
 
 장면: ${S.scenes[c] || ''}
 주인공: ${a.heroName||''} (${a.heroType||''}), 생김새: ${a.heroLook||''}
 장소: ${a.place||''}, ${a.placeLook||''}
 카메라 구도: ${b.camera || '자유롭게'}
-분위기: ${b.mood || '자유롭게'}
-가로로 긴 3:2 비율로 그려줘.`;
+분위기: ${b.mood || '자유롭게'}`;
 }
 function renderDrawArea(){
   const area = $('drawArea'), b = S.board[view.cut];
   const saved = b.img ? `<div class="lbl" style="margin-top:10px">💾 지금 저장된 그림</div><img class="preview-img" src="${b.img}" alt="${view.cut+1}컷 그림">` : '';
   if (view.drawMode === 'draw'){
-    area.innerHTML = `<div class="canvas-wrap"><canvas id="cv" width="600" height="400"></canvas></div>
+    area.innerHTML = `<div class="canvas-wrap"><canvas id="cv" width="640" height="360"></canvas></div>
       <div class="pal" id="pal"></div>
       <div class="row" style="margin-top:8px">
         <button class="btn btn-ghost" onclick="clearCanvas()">🧽 다 지우기</button>
@@ -1133,20 +1252,59 @@ function renderDrawArea(){
       </div>`;
     setupCanvas();
   } else if (view.drawMode === 'gemini'){
-    area.innerHTML = `<div class="tip" style="margin-bottom:8px">① 버튼을 누르면 내 Gemini가 열리고 그림 주문서가 들어가요.<br>② 그림이 나오면 <b>다운로드</b>해요.<br>③ 여기로 돌아와 <b>📷 사진 올리기</b>로 그림을 넣어요!</div>
-      <div class="sum" style="font-size:12px">${esc(imgPrompt(view.cut))}</div>
-      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림 주문서를 보냈어요! 그림을 저장한 뒤 📷 사진 올리기로 넣어요')">🔷 Gemini에게 ${view.cut+1}컷 그림 부탁하기</button>
+    const st = imgStyle();
+    area.innerHTML = `<div class="lbl">🎨 그림 스타일 고르기 <span style="font-weight:400;color:var(--ink-soft)">(4컷 모두 같은 스타일 · 16:9 가로 그림)</span></div>
+      <div class="style-grid">${IMG_STYLES.map(x => `<button class="style-card ${x.id === st.id ? 'sel' : ''}" onclick="pickStyle('${x.id}')"><b>${x.icon} ${x.name}</b>${x.d}</button>`).join('')}</div>
+      <div class="tip" style="margin-bottom:8px">① 아래 버튼을 누르면 그림 주문서가 나와요. <b>Gemini</b>나 <b>ChatGPT</b>를 골라 붙여넣어요.<br>② 그림이 나오면 <b>오른쪽 클릭 → 이미지 복사</b>해요. (휴대폰은 길게 눌러 복사)<br>③ 여기로 돌아와 <b>Ctrl+V</b>로 바로 붙여요! 16:9로 맞춰지고 다음 컷으로 넘어가요 ➡️</div>
+      ${roomBox()}
+      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 오른쪽 클릭 → 이미지 복사 → 이 페이지에서 Ctrl+V! 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!', true)">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
+      ${pasteZone()}
       ${saved}`;
   } else {
-    area.innerHTML = `<label class="btn btn-blue" style="display:block;text-align:center">📷 그림 파일 고르기<input type="file" accept="image/*" style="display:none" onchange="uploadImg(this)"></label>${saved}`;
+    area.innerHTML = `<label class="btn btn-blue" style="display:block;text-align:center">📷 그림 파일 고르기<input type="file" accept="image/*" style="display:none" onchange="uploadImg(this)"></label>${pasteZone()}${saved}`;
   }
+  const z = $('pasteZone'); if (!z) return;
+  z.ondragover = e => { e.preventDefault(); z.classList.add('drag'); };
+  z.ondragleave = () => z.classList.remove('drag');
+  z.ondrop = e => { e.preventDefault(); z.classList.remove('drag'); const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/')); if (f) readImgFile(f); };
+}
+const roomBox = () => {
+  const r = rooms(), saved = AI_SITES.filter(a => r[a.id]);
+  return `<div class="room-box"><b>🔗 같은 채팅방에서 4컷 모두 그리기</b>
+    ${saved.length ? saved.map(a => `<div class="room-on">✅ ${a.icon} ${a.name} 그림 방 저장됨 — 다음 컷도 이 방에서 그려요 <button class="back" onclick="clearRoom('${a.id}')">🆕 새 방</button></div>`).join('')
+      : `<div style="margin:4px 0 6px">1컷을 그린 뒤, AI 화면 <b>맨 위 주소창의 주소</b>를 복사해 여기에 붙여요. 그러면 2~4컷도 같은 방에서 그려서 주인공이 똑같이 나와요!</div>`}
+    <input placeholder="채팅방 주소 붙여넣기 (gemini.google.com/app/… 또는 chatgpt.com/c/…)" onpaste="setTimeout(() => setRoom(this.value), 0)" onchange="setRoom(this.value)"></div>`;
+};
+const pasteZone = () => `<div class="paste-zone" id="pasteZone">📋 복사한 그림을 <b>Ctrl+V</b>(맥은 Cmd+V)로 바로 붙여요<br>그림 파일을 여기로 끌어다 놓아도 돼요
+  <button class="btn btn-ghost" onclick="pasteFromClipboard()">📋 붙여넣기 버튼</button></div>`;
+function readImgFile(f){ const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 640, storeImg); rd.readAsDataURL(f); }
+function onBoard(){ const m = MISSIONS[view.mission]; return view.screen === 'mission' && m && m.type === 'board'; }
+// 어디서든 Ctrl+V 하면 지금 컷에 그림이 붙어요
+document.addEventListener('paste', e => {
+  if (!onBoard()) return;
+  const item = [...(e.clipboardData ? e.clipboardData.items : [])].find(x => x.type.startsWith('image/'));
+  if (!item) return;
+  e.preventDefault(); readImgFile(item.getAsFile());
+});
+async function pasteFromClipboard(){
+  try{
+    for (const it of await navigator.clipboard.read()){
+      const t = it.types.find(x => x.startsWith('image/'));
+      if (t) return readImgFile(await it.getType(t));
+    }
+    toast('복사된 그림이 없어요. 그림에서 오른쪽 클릭 → 이미지 복사를 먼저 해요 🖼️');
+  }catch(e){ toast('키보드로 Ctrl+V(맥은 Cmd+V)를 눌러 붙여 봐요 📋'); }
 }
 function shrinkTo(src, maxW, cb){
   const im = new Image();
   im.onload = () => {
-    const r = Math.min(1, maxW / im.width), cv = document.createElement('canvas');
-    cv.width = Math.round(im.width * r); cv.height = Math.round(im.height * r);
-    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(im, 0, 0, cv.width, cv.height);
+    // 모든 그림을 16:9로 맞춰요 (가운데를 기준으로 잘라요)
+    let sw = im.width, sh = im.width * 9 / 16;
+    if (sh > im.height){ sh = im.height; sw = sh * 16 / 9; }
+    const sx = (im.width - sw) / 2, sy = (im.height - sh) / 2;
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(Math.min(maxW, sw)); cv.height = Math.round(cv.width * 9 / 16);
+    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(im, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
     cb(cv.toDataURL('image/jpeg', 0.78));
   };
   im.src = src;
@@ -1156,10 +1314,14 @@ function storeImg(data){
   S.board[view.cut].img = data; save();
   if (!had){ addXP(10); toast(`${view.cut+1}컷 그림 완성! ⭐ +10`); } else toast('그림을 바꿨어요!');
   renderDrawArea();
+  // 그림을 넣으면 다음 컷으로 넘어가요 (카메라·대사·분위기가 비어 있으면 먼저 채우게 알려 줘요)
+  const c = view.cut;
+  if (!cutDone(c)){ setTimeout(() => toast('그림 완성! 카메라 · 대사 · 분위기도 골라야 다음 컷으로 갈 수 있어요 🎬'), 1200); return; }
+  setTimeout(() => { if (onBoard() && view.cut === c){ if (c < 3){ toast(`${c+2}컷으로 이동해요! ➡️`); go('mission', { cut:c+1 }); } else toast('4컷 그림 완성! 🎬 스토리보드 완성 버튼을 눌러요'); } }, 1000);
 }
 function uploadImg(inp){
   const f = inp.files[0]; if (!f) return;
-  const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 600, storeImg); rd.readAsDataURL(f);
+  readImgFile(f);
 }
 
 // --- 그림판 ---
