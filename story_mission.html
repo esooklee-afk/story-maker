@@ -475,17 +475,38 @@ function load(){ try{ const d = JSON.parse(localStorage.getItem(SAVE_KEY)); if (
 
 // ===== 중간 저장 파일 =====
 // 브라우저에는 답할 때마다 자동 저장되지만, 다른 컴퓨터에서 이어 하려면 파일로 내려받아 가져가요
-function exportSave(){
+async function exportSave(){
   const d = new Date(), day = `${d.getMonth()+1}월${d.getDate()}일`;
+  const name = `이야기탐험대_${S.name}_${day}.json`;
   const blob = new Blob([JSON.stringify({ app:'story_mission', v:1, S })], { type:'application/json' });
+  const done = (where) => showModal('💾', '중간 저장 완료!', `<b>${esc(name)}</b> 파일이 ${where}에 저장됐어요.<br><br>다음에 <b>📂 불러오기</b>로 이 파일을 고르면<br>이어서 만들 수 있어요!`, '좋아요');
+  // 크롬·엣지: 다운로드 폴더에서 열리는 저장 창을 띄워 위치를 고를 수 있어요
+  if (window.showSaveFilePicker){
+    try{
+      const h = await showSaveFilePicker({ suggestedName:name, startIn:'downloads', id:'story_mission',
+        types:[{ description:'이야기 탐험대 저장 파일', accept:{ 'application/json':['.json'] } }] });
+      const w = await h.createWritable(); await w.write(blob); await w.close();
+      return done('고른 폴더');
+    }catch(e){ if (e.name === 'AbortError') return; } // 취소하면 그만, 다른 오류면 아래 방식으로
+  }
+  // 그 밖의 브라우저: 기본 다운로드 폴더로 바로 내려받아요
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `이야기탐험대_${S.name}_${day}.json`;
+  a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  showModal('💾', '중간 저장 완료!', `<b>${esc(a.download)}</b> 파일이 다운로드 폴더에 저장됐어요.<br><br>다음에 <b>📂 불러오기</b>로 이 파일을 고르면<br>이어서 만들 수 있어요!`, '좋아요');
+  done('다운로드 폴더');
 }
-function pickSaveFile(){ $('loadFile').click(); }
+async function pickSaveFile(){
+  // 불러오기 창도 다운로드 폴더(또는 지난번 저장한 폴더)에서 열려요
+  if (window.showOpenFilePicker){
+    try{
+      const [h] = await showOpenFilePicker({ startIn:'downloads', id:'story_mission',
+        types:[{ description:'이야기 탐험대 저장 파일', accept:{ 'application/json':['.json'] } }] });
+      return importSave({ files:[await h.getFile()], value:'' });
+    }catch(e){ if (e.name === 'AbortError') return; }
+  }
+  $('loadFile').click();
+}
 function importSave(input){
   const f = input.files[0]; input.value = '';
   if (!f) return;
