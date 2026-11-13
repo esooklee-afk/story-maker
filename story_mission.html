@@ -151,12 +151,17 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .pal .c.sel{box-shadow:0 0 0 2.5px var(--ink)}
 .pal .tool{padding:6px 10px;border-radius:99px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:700}
 .pal .tool.sel{background:var(--ink);color:#fff}
-.preview-img{width:100%;border-radius:var(--r-sm);border:2px solid var(--border);display:block}
+.preview-img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);border:2px solid var(--border);display:block}
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:6px 0 10px}
+.style-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r-sm);padding:8px;text-align:left;font-size:12px;line-height:1.4;color:var(--ink-soft)}
+.style-card b{display:block;font-size:13px;color:var(--ink)}
+.style-card.sel{border-color:var(--purple);background:var(--purple-light)}
+.style-card.sel b{color:var(--purple-dark)}
 
 /* 완성 스토리보드 */
 .sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sb{border:2px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff}
-.sb .frame{aspect-ratio:3/2;background:#F6F7FB;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.sb .frame{aspect-ratio:16/9;background:#F6F7FB;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
 .sb .frame img{width:100%;height:100%;object-fit:cover}
 .sb .num{position:absolute;top:6px;left:6px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px}
 .sb .info{padding:10px;font-size:12px;line-height:1.6;border-top:2px solid var(--ink)}
@@ -1113,7 +1118,7 @@ function renderBoard(){
       <div class="bq"><div class="q">🖼️ 5. 장면 그림을 만들어요</div>
         <div class="draw-tabs">
           <button class="${view.drawMode==='draw'?'on':''}" onclick="setDraw('draw')">✏️ 직접 그리기</button>
-          <button class="${view.drawMode==='gemini'?'on':''}" onclick="setDraw('gemini')">🔷 Gemini 그림</button>
+          <button class="${view.drawMode==='gemini'?'on':''}" onclick="setDraw('gemini')">🤖 AI 그림</button>
           <button class="${view.drawMode==='upload'?'on':''}" onclick="setDraw('upload')">📷 사진 올리기</button>
         </div>
         <div id="drawArea"></div>
@@ -1151,22 +1156,36 @@ function finishBoard(){
 }
 function setDraw(mode){ view.drawMode = mode; document.querySelectorAll('.draw-tabs button').forEach((b,n) => b.classList.toggle('on', ['draw','gemini','upload'][n] === mode)); renderDrawArea(); }
 
+// 그림 스타일은 4컷 모두 똑같이 써서 그림책 느낌이 이어지게 해요
+const IMG_STYLES = [
+  { id:'watercolor', icon:'🎨', name:'수채화 그림책', d:'부드럽고 따뜻한 느낌', p:'부드러운 수채화 물감으로 그린 따뜻한 어린이 그림책 일러스트' },
+  { id:'crayon',     icon:'🖍️', name:'크레파스',     d:'아이가 그린 듯 정겨운', p:'크레파스로 꾹꾹 눌러 그린 듯한 정겨운 손그림 (질감이 보이게)' },
+  { id:'pencil',     icon:'✏️', name:'색연필',       d:'포근하고 섬세한',     p:'색연필로 섬세하게 칠한 포근한 동화책 일러스트' },
+  { id:'3d',         icon:'🧸', name:'3D 애니메이션', d:'말랑말랑 입체 캐릭터', p:'둥글고 귀여운 3D 애니메이션 영화 느낌의 장면 (부드러운 조명)' },
+  { id:'cartoon',    icon:'💥', name:'만화·웹툰',    d:'선명하고 신나는',     p:'굵은 선과 선명한 색의 밝은 어린이 만화(웹툰) 스타일' },
+  { id:'paper',      icon:'✂️', name:'종이 오리기',  d:'색종이를 붙인 듯',    p:'색종이를 오려 겹겹이 붙인 페이퍼 컷아웃 콜라주 스타일' },
+  { id:'pixel',      icon:'👾', name:'픽셀 아트',    d:'게임 속 장면처럼',    p:'알록달록한 레트로 게임 느낌의 픽셀 아트' },
+  { id:'ink',        icon:'🖌️', name:'옛 그림(수묵)', d:'전래동화에 딱',       p:'은은한 먹과 담채로 그린 한국 전통 민화·수묵화 느낌의 그림' },
+];
+const imgStyle = () => IMG_STYLES.find(x => x.id === S.imgStyle) || IMG_STYLES[0];
+function pickStyle(id){ S.imgStyle = id; save(); renderDrawArea(); toast(`${imgStyle().icon} ${imgStyle().name} 스타일로 그려요! (4컷 모두 같은 스타일)`); }
 function imgPrompt(c){
   const b = S.board[c], a = S.a;
-  return `어린이 그림책 스타일로 따뜻하고 귀여운 그림 1장을 그려줘. 그림 안에 글자는 넣지 마.${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
+  return `이 장면을 그림 1장으로 그려줘. 그림 안에 글자는 넣지 마.
+그림 스타일: ${imgStyle().p} (4컷 모두 같은 스타일과 같은 주인공 모습을 유지해줘)
+그림 크기: 가로로 긴 16:9 비율 (예: 1920×1080). 꼭 가로 16:9로 그려줘.${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
 
 장면: ${S.scenes[c] || ''}
 주인공: ${a.heroName||''} (${a.heroType||''}), 생김새: ${a.heroLook||''}
 장소: ${a.place||''}, ${a.placeLook||''}
 카메라 구도: ${b.camera || '자유롭게'}
-분위기: ${b.mood || '자유롭게'}
-가로로 긴 3:2 비율로 그려줘.`;
+분위기: ${b.mood || '자유롭게'}`;
 }
 function renderDrawArea(){
   const area = $('drawArea'), b = S.board[view.cut];
   const saved = b.img ? `<div class="lbl" style="margin-top:10px">💾 지금 저장된 그림</div><img class="preview-img" src="${b.img}" alt="${view.cut+1}컷 그림">` : '';
   if (view.drawMode === 'draw'){
-    area.innerHTML = `<div class="canvas-wrap"><canvas id="cv" width="600" height="400"></canvas></div>
+    area.innerHTML = `<div class="canvas-wrap"><canvas id="cv" width="640" height="360"></canvas></div>
       <div class="pal" id="pal"></div>
       <div class="row" style="margin-top:8px">
         <button class="btn btn-ghost" onclick="clearCanvas()">🧽 다 지우기</button>
@@ -1174,9 +1193,11 @@ function renderDrawArea(){
       </div>`;
     setupCanvas();
   } else if (view.drawMode === 'gemini'){
-    area.innerHTML = `<div class="tip" style="margin-bottom:8px">① 버튼을 누르면 내 Gemini가 열리고 그림 주문서가 들어가요.<br>② 그림이 나오면 <b>다운로드</b>해요.<br>③ 여기로 돌아와 <b>📷 사진 올리기</b>로 그림을 넣어요!</div>
-      <div class="sum" style="font-size:12px">${esc(imgPrompt(view.cut))}</div>
-      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림 주문서를 보냈어요! 그림을 저장한 뒤 📷 사진 올리기로 넣어요')">🔷 Gemini에게 ${view.cut+1}컷 그림 부탁하기</button>
+    const st = imgStyle();
+    area.innerHTML = `<div class="lbl">🎨 그림 스타일 고르기 <span style="font-weight:400;color:var(--ink-soft)">(4컷 모두 같은 스타일 · 16:9 가로 그림)</span></div>
+      <div class="style-grid">${IMG_STYLES.map(x => `<button class="style-card ${x.id === st.id ? 'sel' : ''}" onclick="pickStyle('${x.id}')"><b>${x.icon} ${x.name}</b>${x.d}</button>`).join('')}</div>
+      <div class="tip" style="margin-bottom:8px">① 아래 버튼을 누르면 그림 주문서가 나와요. <b>Gemini</b>나 <b>ChatGPT</b>를 골라 붙여넣어요.<br>② 그림이 나오면 <b>다운로드</b>해요.<br>③ 여기로 돌아와 <b>📷 사진 올리기</b>로 그림을 넣어요! (16:9로 자동 맞춤)</div>
+      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 다운로드해서 📷 사진 올리기로 넣어요. 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!')">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
       ${saved}`;
   } else {
     area.innerHTML = `<label class="btn btn-blue" style="display:block;text-align:center">📷 그림 파일 고르기<input type="file" accept="image/*" style="display:none" onchange="uploadImg(this)"></label>${saved}`;
@@ -1185,9 +1206,13 @@ function renderDrawArea(){
 function shrinkTo(src, maxW, cb){
   const im = new Image();
   im.onload = () => {
-    const r = Math.min(1, maxW / im.width), cv = document.createElement('canvas');
-    cv.width = Math.round(im.width * r); cv.height = Math.round(im.height * r);
-    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(im, 0, 0, cv.width, cv.height);
+    // 모든 그림을 16:9로 맞춰요 (가운데를 기준으로 잘라요)
+    let sw = im.width, sh = im.width * 9 / 16;
+    if (sh > im.height){ sh = im.height; sw = sh * 16 / 9; }
+    const sx = (im.width - sw) / 2, sy = (im.height - sh) / 2;
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(Math.min(maxW, sw)); cv.height = Math.round(cv.width * 9 / 16);
+    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(im, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
     cb(cv.toDataURL('image/jpeg', 0.78));
   };
   im.src = src;
@@ -1200,7 +1225,7 @@ function storeImg(data){
 }
 function uploadImg(inp){
   const f = inp.files[0]; if (!f) return;
-  const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 600, storeImg); rd.readAsDataURL(f);
+  const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 640, storeImg); rd.readAsDataURL(f);
 }
 
 // --- 그림판 ---
