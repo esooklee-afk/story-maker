@@ -100,6 +100,12 @@ main{max-width:720px;margin:18px auto;padding:0 16px}
 .chip{background:var(--white);border:1.5px solid var(--purple);color:var(--purple-dark);border-radius:99px;padding:7px 13px;font-size:13px;font-weight:500}
 .chip:hover{background:var(--purple-light)}
 .chip.sel{background:var(--purple);color:#fff}
+.chips.boxes{flex-direction:column;gap:6px}
+.cbox{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none}
+.cbox:hover{border-color:var(--purple)}
+.cbox input{width:20px;height:20px;accent-color:var(--purple);flex-shrink:0;cursor:pointer}
+.cbox:has(input:checked){background:var(--purple-light);border-color:var(--purple);color:var(--purple-dark);font-weight:700}
+.cbox-hint{font-size:12px;color:var(--ink-soft);margin:2px 2px 0}
 .inrow{display:flex;gap:8px}
 .inrow textarea{flex:1;padding:12px 14px;border-radius:var(--r-sm);border:2px solid var(--border);font-size:15px;resize:none;line-height:1.5}
 .inrow textarea:focus{outline:none;border-color:var(--purple)}
@@ -910,8 +916,18 @@ function askQ(){
   const m = MISSIONS[view.mission], q = getQ(view.mission, view.q);
   view.follow = false;
   bubble(fill(q.q), 'ai');
-  $('chipBox').innerHTML = q.chips.map(c => `<button class="chip" onclick="pickChip(this)">${esc(fill(c))}</button>`).join('');
-  const ta = $('ans'); ta.value = S.a[q.k] || ''; ta.placeholder = '내 생각을 써 봐요 (위의 보기를 눌러도 돼요)'; ta.focus();
+  // 보기는 체크박스예요. 여러 개 고르면 답 칸에 쉼표로 합쳐져요
+  const prev = S.a[q.k] || '', box = $('chipBox');
+  box.className = 'chips boxes';
+  box.innerHTML = q.chips.map(c => { const t = fill(c);
+    return `<label class="cbox"><input type="checkbox" value="${esc(t)}" onchange="pickBoxes()"${prev.split(', ').includes(t) ? ' checked' : ''}>${esc(t)}</label>`; }).join('')
+    + '<div class="cbox-hint">☑ 여러 개 골라도 돼요! 고른 뒤 답 칸에서 고쳐 써도 좋아요</div>';
+  const ta = $('ans'); ta.value = prev; ta.placeholder = '내 생각을 써 봐요 (위의 보기를 골라도 돼요)'; ta.focus();
+}
+function pickBoxes(){
+  const ta = $('ans');
+  ta.value = [...document.querySelectorAll('#chipBox input:checked')].map(x => x.value).join(', ');
+  ta.focus();
 }
 function pickChip(el){ const ta = $('ans'); ta.value = el.textContent; ta.focus(); }
 
@@ -942,6 +958,7 @@ function followText(q){ return `[${FOLLOW[q.k].t}] ` + fill(FOLLOW[q.k].q); }
 function askFollow(q){
   view.follow = true; view.fcount = (view.fcount || 0) + 1;
   bubble(followText(q), 'think');
+  $('chipBox').className = 'chips';
   $('chipBox').innerHTML = `<button class="chip" onclick="pickChip(this)">${SKIP}</button>`
     + ['왜냐하면 ','만약에 ','내 생각에는 '].map(s => `<button class="chip starter" onclick="startWith(this)">${s}…</button>`).join('');
   const ta = $('ans'); ta.value = S.a[q.k + '_why'] || ''; ta.placeholder = '정답은 없어! 떠오르는 대로 써 봐요 🧠'; ta.focus();
