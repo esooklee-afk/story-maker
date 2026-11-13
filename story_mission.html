@@ -146,6 +146,10 @@ textarea.paste{width:100%;border:2px dashed var(--border);border-radius:var(--r-
 .paste-zone{border:2.5px dashed #B8A9F5;border-radius:var(--r-sm);background:#FAF8FF;padding:14px;text-align:center;font-size:13px;color:var(--purple-dark);margin-top:8px;line-height:1.6}
 .paste-zone.drag{background:var(--purple-light);border-color:var(--purple)}
 .paste-zone .btn{margin-top:8px}
+.room-box{background:#F3F8FF;border:1.5px solid #BFD6FF;border-radius:var(--r-sm);padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:8px;color:var(--ink)}
+.room-box input{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;margin-top:4px}
+.room-on{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0;font-weight:700;color:#1a56c4}
+.room-on .back{padding:3px 10px;font-size:11px;margin-left:auto}
 .mood{border:2px solid transparent;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
 .mood.sel{border-color:var(--ink)}
 .draw-tabs{display:flex;gap:6px;margin-bottom:8px}
@@ -620,7 +624,28 @@ const AI_SITES = [
   { id:'gemini',  name:'Gemini',  icon:'🔷', cls:'btn-gemini', url:p => 'https://gemini.google.com/app' },
   { id:'chatgpt', name:'ChatGPT', icon:'🟢', cls:'btn-gpt',    url:p => 'https://chatgpt.com/?q=' + encodeURIComponent(p) },
 ];
-function openGemini(prompt, msg){
+// ===== 그림 채팅방 이어 쓰기 =====
+// 4컷 그림을 한 채팅방에서 그리면 AI가 앞 그림을 기억해서 주인공과 스타일이 똑같이 이어져요
+const ROOM_RE = { gemini:/^https:\/\/gemini\.google\.com\/(u\/\d+\/)?app\/[\w-]+/, chatgpt:/^https:\/\/chatgpt\.com\/(g\/[\w-]+\/)?c\/[\w-]+/ };
+const rooms = () => (S.rooms = S.rooms || {});
+function setRoom(url){
+  url = (url || '').trim();
+  const id = Object.keys(ROOM_RE).find(k => ROOM_RE[k].test(url));
+  if (!id){ if (url) toast('채팅방 주소가 아니에요. 주소창의 주소를 통째로 복사해 붙여요 🔗'); return; }
+  rooms()[id] = url.split(/[?#]/)[0]; save(); renderDrawArea();
+  toast(`✅ ${id === 'gemini' ? 'Gemini' : 'ChatGPT'} 그림 채팅방을 저장했어요! 다음 컷도 이 방에서 그려요`);
+}
+function clearRoom(id){ delete rooms()[id]; save(); renderDrawArea(); toast('다음 그림은 새 채팅방에서 시작해요 🆕'); }
+// 이름 붙인 탭을 다시 쓰면 이미 열린 AI 탭으로 돌아가요. 탭이 없으면 저장한 방 주소를 새로 열어요
+function openRoom(id, href){
+  const w = window.open('', 'story_' + id);
+  if (!w){ location.href = href; return; }
+  let blank = false;
+  try{ blank = w.location.href === 'about:blank'; }catch(e){}   // 다른 사이트가 열려 있으면 읽을 수 없어요 → 이미 열린 AI 탭
+  if (blank) w.location.href = href;
+  try{ w.focus(); }catch(e){}
+}
+function openGemini(prompt, msg, room){
   copyText(prompt);
   const bg = document.createElement('div'); bg.className = 'modal-bg';
   bg.innerHTML = `<div class="modal" style="text-align:left">
@@ -631,14 +656,19 @@ function openGemini(prompt, msg){
     ③ 입력칸에 <b>붙여넣기</b>(Ctrl+V / Cmd+V) 하고 보내요!</p>
     <textarea readonly class="ai-prompt">${esc(prompt)}</textarea>
     <button class="btn btn-ghost" data-act="copy" style="margin-bottom:8px">📋 질문 복사하기</button>
-    <div class="row">${AI_SITES.map(a => `<a class="btn ${a.cls}" data-ai="${a.id}" style="text-align:center;text-decoration:none" href="${esc(a.url(prompt))}" target="_blank" rel="noopener">${a.icon} ${a.name} 열기</a>`).join('')}</div>
+    <div class="row">${AI_SITES.map(a => { const r = room && rooms()[a.id];
+      return `<a class="btn ${a.cls}" data-ai="${a.id}" data-room="${r ? 1 : ''}" style="text-align:center;text-decoration:none" href="${esc(r || a.url(prompt))}" target="_blank" rel="noopener">${a.icon} ${a.name} ${r ? '같은 방 열기' : '열기'}</a>`; }).join('')}</div>
     ${msg ? `<div class="tip" style="margin:10px 0 8px">💡 ${esc(msg)}</div>` : ''}
     <button class="btn btn-purple" data-act="close" style="margin-top:4px">닫기</button></div>`;
   const ta = bg.querySelector('.ai-prompt');
   ta.onclick = () => ta.select();
   bg.querySelector('[data-act=copy]').onclick = () => copyText(prompt).then(() => { ta.select(); toast('질문을 복사했어요! AI 입력칸에 붙여넣어요 📋'); });
   // 링크를 누르는 순간 한 번 더 복사해서, 새 창에서 바로 붙여넣을 수 있게 해요
-  bg.querySelectorAll('[data-ai]').forEach(el => el.addEventListener('click', () => { copyText(prompt); toast(`${el.textContent.replace(' 열기','')}가 열려요! 입력칸에 붙여넣기 해요 📋`); }));
+  bg.querySelectorAll('[data-ai]').forEach(el => el.addEventListener('click', e => {
+    copyText(prompt);
+    if (room){ e.preventDefault(); openRoom(el.dataset.ai, el.href); }
+    toast(el.dataset.room ? '같은 채팅방으로 가요! 입력칸에 붙여넣기 해요 📋' : 'AI가 열려요! 입력칸에 붙여넣기 해요 📋');
+  }));
   bg.querySelector('[data-act=close]').onclick = () => bg.remove();
   document.body.appendChild(bg);
 }
@@ -1202,7 +1232,7 @@ function imgPrompt(c){
   const b = S.board[c], a = S.a;
   return `이 장면을 그림 1장으로 그려줘. 그림 안에 글자는 넣지 마.
 그림 스타일: ${imgStyle().p} (4컷 모두 같은 스타일과 같은 주인공 모습을 유지해줘)
-그림 크기: 가로로 긴 16:9 비율 (예: 1920×1080). 꼭 가로 16:9로 그려줘.${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
+그림 크기: 가로로 긴 16:9 비율 (예: 1920×1080). 꼭 가로 16:9로 그려줘.${c > 0 ? `\n이건 ${c+1}번째 컷이야. 이 채팅방에서 앞에 그린 그림과 같은 주인공 얼굴·옷·색깔, 같은 그림 스타일로 이어서 그려줘.` : ''}${genre() ? `\n이야기 장르: ${genre().name} (${genre().guide})` : ''}
 
 장면: ${S.scenes[c] || ''}
 주인공: ${a.heroName||''} (${a.heroType||''}), 생김새: ${a.heroLook||''}
@@ -1226,7 +1256,8 @@ function renderDrawArea(){
     area.innerHTML = `<div class="lbl">🎨 그림 스타일 고르기 <span style="font-weight:400;color:var(--ink-soft)">(4컷 모두 같은 스타일 · 16:9 가로 그림)</span></div>
       <div class="style-grid">${IMG_STYLES.map(x => `<button class="style-card ${x.id === st.id ? 'sel' : ''}" onclick="pickStyle('${x.id}')"><b>${x.icon} ${x.name}</b>${x.d}</button>`).join('')}</div>
       <div class="tip" style="margin-bottom:8px">① 아래 버튼을 누르면 그림 주문서가 나와요. <b>Gemini</b>나 <b>ChatGPT</b>를 골라 붙여넣어요.<br>② 그림이 나오면 <b>오른쪽 클릭 → 이미지 복사</b>해요. (휴대폰은 길게 눌러 복사)<br>③ 여기로 돌아와 <b>Ctrl+V</b>로 바로 붙여요! 16:9로 맞춰지고 다음 컷으로 넘어가요 ➡️</div>
-      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 오른쪽 클릭 → 이미지 복사 → 이 페이지에서 Ctrl+V! 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!')">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
+      ${roomBox()}
+      <button class="btn btn-gemini" onclick="openGemini(imgPrompt(${view.cut}),'그림이 나오면 오른쪽 클릭 → 이미지 복사 → 이 페이지에서 Ctrl+V! 세로 그림이 나오면 「가로 16:9로 다시 그려줘」라고 말해 봐요!', true)">🤖 AI에게 ${view.cut+1}컷 그림 부탁하기 (${st.icon} ${st.name})</button>
       ${pasteZone()}
       ${saved}`;
   } else {
@@ -1237,6 +1268,13 @@ function renderDrawArea(){
   z.ondragleave = () => z.classList.remove('drag');
   z.ondrop = e => { e.preventDefault(); z.classList.remove('drag'); const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/')); if (f) readImgFile(f); };
 }
+const roomBox = () => {
+  const r = rooms(), saved = AI_SITES.filter(a => r[a.id]);
+  return `<div class="room-box"><b>🔗 같은 채팅방에서 4컷 모두 그리기</b>
+    ${saved.length ? saved.map(a => `<div class="room-on">✅ ${a.icon} ${a.name} 그림 방 저장됨 — 다음 컷도 이 방에서 그려요 <button class="back" onclick="clearRoom('${a.id}')">🆕 새 방</button></div>`).join('')
+      : `<div style="margin:4px 0 6px">1컷을 그린 뒤, AI 화면 <b>맨 위 주소창의 주소</b>를 복사해 여기에 붙여요. 그러면 2~4컷도 같은 방에서 그려서 주인공이 똑같이 나와요!</div>`}
+    <input placeholder="채팅방 주소 붙여넣기 (gemini.google.com/app/… 또는 chatgpt.com/c/…)" onpaste="setTimeout(() => setRoom(this.value), 0)" onchange="setRoom(this.value)"></div>`;
+};
 const pasteZone = () => `<div class="paste-zone" id="pasteZone">📋 복사한 그림을 <b>Ctrl+V</b>(맥은 Cmd+V)로 바로 붙여요<br>그림 파일을 여기로 끌어다 놓아도 돼요
   <button class="btn btn-ghost" onclick="pasteFromClipboard()">📋 붙여넣기 버튼</button></div>`;
 function readImgFile(f){ const rd = new FileReader(); rd.onload = e => shrinkTo(e.target.result, 640, storeImg); rd.readAsDataURL(f); }
